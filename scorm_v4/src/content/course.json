@@ -1,0 +1,98 @@
+{
+  "course": { "id": "scorm-v4", "title": "SCORM v4 Template", "version": "4.0.0" },
+
+  "system": {
+    "routes": [
+      {
+        "id": "overview",
+        "title": "Overview",
+        "route": "/overview",
+        "page": {
+          "layout": { "maxWidth": "xl", "gap": "lg" },
+          "blocks": [
+            { "type": "text", "variant": "h1", "text": "Overview" },
+            { "type": "text", "variant": "muted", "text": "Select a chapter from the navigation." }
+          ]
+        }
+      }
+    ],
+    "fallbackRoute": "/overview"
+  },
+
+  "unlockMode": "linear",
+  "completionMode": "requiredChapters",
+
+  "scoring": {
+    "aggregation": "best", 
+    "passRule": { "mode": "anyQuizPassed" } 
+  },
+
+  "lessons": [
+    {
+      "id": "lesson-1",
+      "title": "Lesson 1",
+      "chapters": [
+        {
+          "id": "ch-1",
+          "title": "Intro (YouTube + Quiz)",
+          "route": "/lesson-1/intro",
+          "required": true,
+          "page": {
+            "layout": { "maxWidth": "xl", "gap": "lg" },
+            "blocks": [
+              { "type": "text", "variant": "h1", "text": "Intro" },
+
+              {
+                "type": "video.youtube",
+                "title": "Watch this first",
+                "videoId": "dQw4w9WgXcQ",
+                "mode": "link"
+              },
+              {
+              "type": "video.youtube",
+              "title": "Video",
+              "embedUrl": "https://www.youtube-nocookie.com/embed/3RsmRMqX2IY?si=ULVpZbw1E_oziYgQ"
+              },
+
+              {
+                "type": "quiz.mcq",
+                "quizId": "lesson-1-intro-quiz",
+                "title": "Quick check",
+                "scoreMax": 100,
+                "passScore": 80,
+                "shuffleOptions": true,
+                "attemptsAllowed": 0,
+                "questions": [
+                  {
+                    "id": "q1",
+                    "prompt": "SCORM 2004 API object name is…",
+                    "options": [
+                      { "id": "a", "text": "API_1484_11" },
+                      { "id": "b", "text": "API_11" },
+                      { "id": "c", "text": "SCORM_API" }
+                    ],
+                    "correct": ["a"]
+                  },
+                  {
+                    "id": "q2",
+                    "prompt": "Where do we store our progress state JSON?",
+                    "options": [
+                      { "id": "a", "text": "localStorage" },
+                      { "id": "b", "text": "cmi.suspend_data" },
+                      { "id": "c", "text": "cookies" }
+                    ],
+                    "correct": ["b"]
+                  }
+                ],
+                "onSubmit": {
+                  "markChapterComplete": true,
+                  "commit": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

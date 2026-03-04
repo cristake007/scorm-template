@@ -1,0 +1,109 @@
+.appLayout { min-height: 100vh; }
+
+/* AppBar title */
+.appbarTitleWrap { display: flex; flex-direction: column; line-height: 1.1; }
+.appbarTitle { font-weight: 700; }
+.appbarSubtitle { font-size: 12px; opacity: 0.75; }
+
+/* Drawer surface */
+.navDrawer {
+  border-right: 1px solid var(--color-border);
+  background: var(--color-surface);
+  overflow: visible;
+}
+.navDrawer.isResizing { transition: none !important; }
+
+/* Remove Vuetify hover/pressed layers (so OUR hover shows) */
+.navRow .v-btn__overlay,
+.navRow .v-btn__underlay { opacity: 0 !important; }
+
+/* Rows */
+.navRow {
+  width: 100% !important;
+  min-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  justify-content: flex-start;
+  min-height: 52px;
+  color: rgba(0, 0, 0, 0.87);
+}
+.navRow:not(.v-btn--disabled):hover,
+.navRow:not(.v-btn--disabled):focus-visible {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+.navRow .v-btn__content { width: 100%; justify-content: flex-start; }
+
+.navRow__inner {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 14px 16px;
+  gap: 12px;
+}
+
+.navRow__left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.navRow__index {
+  width: 18px;
+  text-align: right;
+  margin-left: 1ch;
+  color: rgba(0, 0, 0, 0.55);
+  flex: 0 0 auto;
+}
+
+.navRow__text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+
+.navRow__title { font-size: 14px; line-height: 1.25; white-space: normal; overflow: visible; }
+.navRow__title--bold { font-weight: 900; }
+
+.navRow__subtitle { margin-top: 2px; font-size: 12px; opacity: 0.65; line-height: 1.2; }
+
+.navRow__right { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; padding-top: 2px; }
+
+/* Active row */
+.navRow--active { background: rgba(25, 118, 210, 0.10) !important; }
+.navRow--active .navRow__title { font-weight: 700 !important; }
+.navRow--active .navRow__title,
+.navRow--active .navRow__subtitle { color: var(--color-primary) !important; }
+
+/* Child indentation */
+.navRow--child .navRow__inner { padding-left: 22px; }
+
+/* Divider */
+.navDivider { height: 1px; width: 100%; background: var(--color-border); }
+
+/* Resizer handle */
+.drawerResizer {
+  position: absolute;
+  top: 0;
+  right: -6px;
+  width: 12px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  touch-action: none;
+  z-index: 10;
+}
+.drawerResizer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 5px;
+  width: 2px;
+  height: 100%;
+  background: transparent;
+  transition: background 0.12s ease;
+}
+.drawerResizer:hover::after { background: var(--color-primary); }
+.navDrawer.isResizing .drawerResizer::after { background: var(--color-primary); }
+
+.navLockedMsg { padding: 10px 12px; font-size: 12px; color: var(--text-muted); }
