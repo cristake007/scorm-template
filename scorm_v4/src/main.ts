@@ -1,4 +1,4 @@
-import { createApp, h, ref } from "vue";
+import { createApp, ref, reactive, computed, h, defineComponent, provide } from "vue";
 import { createRouter, createWebHashHistory } from "vue-router";
 
 import "vuetify/styles";
@@ -14,9 +14,13 @@ import { installCourseGuards } from "./engine/router/guards";
 import { createScormClientStrict } from "./scorm/scormClient";
 
 import { loadProgress } from "./engine/progress/progressStore";
+import { saveProgress } from "./engine/progress/progressStore";
 import { buildNav } from "./engine/navigation/navModel";
 
-import "./styles/tokens.css";
+import { AppContextKey } from "./engine/appContext";
+
+import "./styles/master.css";
+import "./styles/tokens.css"; // optional: remove later once migrated
 import "./styles/base.css";
 import "./styles/components.css";
 import "./styles/shell.css";
@@ -29,13 +33,13 @@ async function boot() {
   // 1) Load course JSON (single source of truth)
   const course = await loadCourse();
 
-  // 2) Create router from course.json (no hardcoded chapter paths)
+  // 2) Router from course.json
   const router = createRouter({
     history: createWebHashHistory(),
     routes: buildRoutes(course)
   });
 
-  // 3) Strict SCORM client (no mock): hard-fail if API missing
+  // 3) Strict SCORM client
   const scorm = createScormClientStrict();
   const ok = scorm.initialize();
   if (!ok) {
@@ -52,18 +56,15 @@ async function boot() {
     return;
   }
 
-  // 4) Load progress from suspend_data (single source of truth)
-  const state = loadProgress(scorm, course);
+  // 4) Load progress once + make reactive
+  const state = reactive(loadProgress(scorm, course));
 
-  // 5) Reactive nav model (computed from course + progress)
-  const nav = ref(buildNav(course, state));
+  // 5) Reactive nav derived from course + state
+  const nav = computed(() => buildNav(course, state));
+
   const lockedMessage = ref("");
 
-  function refreshNav() {
-    nav.value = buildNav(course, state);
-  }
-
-  // 6) Guards: linear unlock + route bookmark persistence
+  // 6) Guards: linear unlock + bookmarking
   installCourseGuards({
     router,
     course,
@@ -75,37 +76,56 @@ async function boot() {
     }
   });
 
-  // 7) Resume from bookmark (cmi.location) if valid
+  // 7) Resume from bookmark (best-effort)
   const bookmark = scorm.get("cmi.location") || "";
   if (bookmark) {
-    const valid = router.getRoutes().some((r) => r.path === bookmark);
-    if (valid) router.replace(bookmark);
+    try {
+      router.replace(bookmark);
+    } catch {
+      /* ignore invalid bookmark */
+    }
   }
 
-  // 8) Refresh nav after each navigation (so checkmarks/locks update)
-  router.afterEach(() => refreshNav());
+  // 8) Root wrapper provides ctx + passes computed nav
+  const Root = defineComponent({
+    name: "Root",
+    setup() {
+      provide(AppContextKey, { course, scorm, state });
+      return () =>
+        h(App as any, {
+          courseTitle: course.course.title,
+          courseVersion: `v${course.course.version}`,
+          nav: nav.value,
+          lockedMessage: lockedMessage.value
+        });
+    }
+  });
 
-  // 9) Mount app
-  createApp({
-    render: () =>
-      h(App, {
-        courseTitle: course.course.title,
-        courseVersion: `v${course.course.version}`,
-        nav: nav.value,
-        lockedMessage: lockedMessage.value,
-        exit: () => {
-          try {
-            scorm.commit();
-            scorm.terminate();
-          } catch {
-            /* noop */
-          }
-        }
-      })
-  })
-    .use(router)
-    .use(vuetify)
-    .mount("#app");
+  function suspendAndTerminate() {
+  try {
+    // ensure latest state is written
+    saveProgress(scorm, state);
+
+    // IMPORTANT for SCORM 2004: tell LMS we are suspending (so suspend_data/location should be kept)
+    scorm.set("cmi.exit", "suspend");
+
+    // best-effort push
+    scorm.commit();
+
+    // close the SCORM session
+    scorm.terminate();
+  } catch {
+    /* noop */
+  }
+}
+
+// pagehide is more reliable than beforeunload on modern browsers
+window.addEventListener("pagehide", suspendAndTerminate);
+
+// keep beforeunload as fallback
+window.addEventListener("beforeunload", suspendAndTerminate);
+
+  createApp(Root).use(router).use(vuetify).mount("#app");
 }
 
 boot();

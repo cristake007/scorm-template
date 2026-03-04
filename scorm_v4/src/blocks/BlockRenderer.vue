@@ -1,48 +1,67 @@
 <template>
-  <component
-    :is="component"
-    v-bind="block"
-    @quiz-submitted="(payload) => emit('quiz-submitted', payload)"
-  />
+  <component :is="Comp" v-bind="compProps" @quiz-submitted="forwardQuiz" />
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import type { Block } from "../engine/course/courseLoader";
+import { computed, inject } from "vue";
+import { AppContextKey } from "../engine/appContext";
 
-import VideoYouTubeBlock from "./VideoYouTubeBlock.vue";
 import QuizMcqBlock from "./QuizMcqBlock.vue";
+import VideoYouTubeBlock from "./VideoYouTubeBlock.vue";
+import AudioBlock from "./AudioBlock.vue";
+import QuizClozeSelectBlock from "./QuizClozeSelectBlock.vue";
+import QuizMatchBlock from "./QuizMatchBlock.vue";
+// import other blocks you have...
+// import TextBlock from "./TextBlock.vue"; etc.
 
-const props = defineProps<{ block: Block }>();
+const props = defineProps<{ block: any }>();
 
 const emit = defineEmits<{
-  (e: "quiz-submitted", payload: { quizId: string; raw: number; max: number; passScore: number }): void;
+  (e: "quiz-submitted", payload: {
+    quizId: string;
+    raw: number;
+    max: number;
+    passScore: number;
+    responses: Record<string, string | string[]>;
+  }): void;
 }>();
 
-const component = computed(() => {
+const ctx = inject(AppContextKey);
+
+// Component chooser (extend as you add blocks)
+const Comp = computed(() => {
   switch (props.block.type) {
-    case "video.youtube":
-      return VideoYouTubeBlock;
     case "quiz.mcq":
       return QuizMcqBlock;
-    case "text":
-    case "image":
-      // We’ll add these next (or you can temporarily render as plain)
-      return {
-        props: ["type", "text", "src", "alt", "variant"],
-        template:
-          '<div class="scorm-card"><div v-if="type===\'text\'"><div :class="variantClass">{{text}}</div></div><div v-else><img :src="src" :alt="alt||\'\'" style="max-width:100%;height:auto;border-radius:12px"/></div></div>',
-        computed: {
-          variantClass() {
-            return this.variant === "h1" ? "scorm-h1" : this.variant === "muted" ? "scorm-muted" : "";
-          }
-        }
-      } as any;
+    case "quiz.clozeSelect":
+      return QuizClozeSelectBlock;
+    case "quiz.match":
+      return QuizMatchBlock;
+    case "audio":
+      return AudioBlock;
+    case "video.youtube":
+      return VideoYouTubeBlock;
     default:
-      return {
-        props: ["type"],
-        template: '<div class="scorm-card"><div class="scorm-muted">Unsupported block: {{ type }}</div></div>'
-      } as any;
+      return "div";
   }
 });
+
+const compProps = computed(() => {
+  if (typeof props.block.type === "string" && props.block.type.startsWith("quiz.")) {
+    const quizId = props.block.quizId as string;
+    const existing = ctx?.state.scores?.[quizId] ?? null;
+    return { ...props.block, existing };
+  }
+  return props.block;
+});
+
+function forwardQuiz(payload: {
+  quizId: string;
+  raw: number;
+  max: number;
+  passScore: number;
+  responses: Record<string, string | string[]>;
+}) {
+  emit("quiz-submitted", payload);
+}
 </script>

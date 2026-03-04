@@ -23,8 +23,8 @@
   "completionMode": "requiredChapters",
 
   "scoring": {
-    "aggregation": "best", 
-    "passRule": { "mode": "anyQuizPassed" } 
+    "aggregation": "best",
+    "passRule": { "mode": "anyQuizPassed" }
   },
 
   "lessons": [
@@ -49,10 +49,12 @@
                 "mode": "link"
               },
               {
-              "type": "video.youtube",
-              "title": "Video",
-              "embedUrl": "https://www.youtube-nocookie.com/embed/3RsmRMqX2IY?si=ULVpZbw1E_oziYgQ"
+                "type": "video.youtube",
+                "title": "Video",
+                "embedUrl": "https://www.youtube-nocookie.com/embed/3RsmRMqX2IY?si=ULVpZbw1E_oziYgQ"
               },
+
+              { "type": "audio", "title": "Listen", "src": "./media/lesson-1/audio1.mp3" },
 
               {
                 "type": "quiz.mcq",
@@ -84,10 +86,46 @@
                     "correct": ["b"]
                   }
                 ],
-                "onSubmit": {
-                  "markChapterComplete": true,
-                  "commit": true
-                }
+                "onSubmit": { "markChapterComplete": true, "commit": true }
+              },
+
+              {
+                "type": "quiz.clozeSelect",
+                "quizId": "lesson-1-cloze",
+                "title": "Fill the gaps",
+                "scoreMax": 100,
+                "passScore": 80,
+                "text": [
+                  { "t": "SCORM 2004 API is " },
+                  {
+                    "blankId": "b1",
+                    "options": [
+                      { "id": "a", "text": "API_1484_11", "correct": true },
+                      { "id": "b", "text": "API_11" }
+                    ]
+                  },
+                  { "t": " and progress is stored in " },
+                  {
+                    "blankId": "b2",
+                    "options": [
+                      { "id": "a", "text": "cmi.suspend_data", "correct": true },
+                      { "id": "b", "text": "localStorage" }
+                    ]
+                  },
+                  { "t": "." }
+                ]
+              },
+
+              {
+                "type": "quiz.match",
+                "quizId": "lesson-1-match",
+                "title": "Match the terms",
+                "scoreMax": 100,
+                "passScore": 80,
+                "pairs": [
+                  { "leftId": "l1", "left": "API_1484_11", "rightId": "r1", "right": "SCORM 2004 API object" },
+                  { "leftId": "l2", "left": "cmi.suspend_data", "rightId": "r2", "right": "Progress JSON storage" }
+                ]
               }
             ]
           }

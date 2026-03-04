@@ -9,6 +9,7 @@ export type ScoreEntry = {
   max: number;
   passed: boolean;
   lastAttemptAt: string;
+  lastResponses?: Record<string, string | string[]>;
 };
 
 export type ProgressStateV1 = {
@@ -101,7 +102,12 @@ export function loadProgress(scorm: ScormClient, course: CourseModel): ProgressS
 
 export function saveProgress(scorm: ScormClient, state: ProgressStateV1): boolean {
   state.timestamps.lastSavedAt = nowIso();
-  return scorm.set("cmi.suspend_data", safeStringify(state));
+  const ok = scorm.set("cmi.suspend_data", safeStringify(state));
+  if (!ok) {
+    // eslint-disable-next-line no-console
+    console.warn("SCORM: failed to set cmi.suspend_data", scorm.getLastError?.());
+  }
+  return ok;
 }
 
 export function markChapterComplete(state: ProgressStateV1, lessonId: string, chapterId: string) {
@@ -134,8 +140,9 @@ export function recordQuizAttempt(params: {
   raw: number;
   max: number;
   passScore: number;
+  responses?: Record<string, string | string[]>;
 }) {
-  const { state, quizId, raw, max, passScore } = params;
+  const { state, quizId, raw, max, passScore, responses } = params;
   const passed = raw >= passScore;
 
   const existing = state.scores[quizId];
@@ -146,7 +153,8 @@ export function recordQuizAttempt(params: {
       lastRaw: raw,
       max,
       passed,
-      lastAttemptAt: nowIso()
+      lastAttemptAt: nowIso(),
+      lastResponses: responses ?? {}
     };
     return;
   }
@@ -157,4 +165,5 @@ export function recordQuizAttempt(params: {
   existing.bestRaw = Math.max(existing.bestRaw ?? 0, raw);
   existing.passed = existing.passed || passed;
   existing.lastAttemptAt = nowIso();
+  if (responses) existing.lastResponses = responses;
 }

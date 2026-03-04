@@ -1,0 +1,54 @@
+/* src/styles/master.css */
+
+/* === EDIT HERE ONLY === */
+:root {
+  --color-primary: #1976d2;
+  --color-bg: #f6f7fb;
+  --color-surface: #ffffff;
+  --color-border: rgba(0, 0, 0, 0.12);
+
+  --text-default: rgba(0, 0, 0, 0.87);
+  --text-muted: rgba(0, 0, 0, 0.65);
+
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+
+  --page-max: 1100px;
+  --page-max-wide: 1320px;
+  --page-pad: 18px;
+
+  --card-pad: 16px;
+  --card-radius: var(--radius-md);
+  --quiz-pass: #2e7d32;
+  --quiz-fail: #c62828;
+}
+
+/* Optional helper primitives you can reuse in blocks */
+.scorm-page {
+  width: 100%;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: var(--page-pad);
+}
+
+.scorm-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--card-radius);
+  padding: var(--card-pad);
+}
+
+.scorm-h1 { margin: 0 0 10px 0; font-size: 20px; }
+.scorm-muted { margin: 0; color: var(--text-muted); }
+
+.scorm-media {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: #00000008;
+  overflow: hidden;
+}
+
+.no-select { user-select: none; }
+

@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-layout class="appLayout">
+    <v-layout class="appLayout" :class="{ drawerClosed: !drawerOpen }">
       <v-app-bar color="surface" :elevation="2" density="comfortable" :height="80">
         <template #prepend>
           <v-app-bar-nav-icon icon="mdi-menu" @click="drawerOpen = !drawerOpen" />
@@ -137,8 +137,8 @@ defineProps<{
   courseVersion: string;
   nav: NavLesson[];
   lockedMessage: string;
+  logoUrl?: string;
 }>();
-
 
 const { mdAndUp } = useDisplay();
 const route = useRoute();
@@ -180,14 +180,23 @@ function startResize(e: PointerEvent) {
   document.documentElement.classList.add("no-select");
   el.setPointerCapture(e.pointerId);
 
+  let raf = 0;
+  let latestX = e.clientX;
+
   onMove = (ev: PointerEvent) => {
-    if (!resizing.value) return;
-    drawerWidth.value = clamp(ev.clientX, MIN_W, MAX_W());
+    latestX = ev.clientX;
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      if (!resizing.value) return;
+      drawerWidth.value = clamp(latestX, MIN_W, MAX_W());
+    });
   };
 
   onUp = () => {
     resizing.value = false;
     document.documentElement.classList.remove("no-select");
+    if (raf) cancelAnimationFrame(raf);
     window.removeEventListener("pointermove", onMove!);
     window.removeEventListener("pointerup", onUp!);
     onMove = null;
@@ -205,7 +214,4 @@ onBeforeUnmount(() => {
   if (onMove) window.removeEventListener("pointermove", onMove);
   if (onUp) window.removeEventListener("pointerup", onUp);
 });
-
-// Optional logo
-const logoUrl = "./src/assets/images/logo.svg";
 </script>

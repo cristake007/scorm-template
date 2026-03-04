@@ -3,7 +3,11 @@ import type { CourseModel } from "../course/courseLoader";
 import type { ScormClient } from "../../scorm/scormClient";
 import type { ProgressStateV1 } from "../progress/progressStore";
 import { saveProgress } from "../progress/progressStore";
-import { highestUnlockedLessonId, firstChapterRouteForLesson, isChapterUnlocked } from "../progress/unlockRules";
+import {
+  highestUnlockedLessonId,
+  firstChapterRouteForLesson,
+  isChapterUnlocked,
+} from "../progress/unlockRules";
 
 export function installCourseGuards(opts: {
   router: Router;
@@ -14,6 +18,37 @@ export function installCourseGuards(opts: {
 }) {
   const { router, course, scorm, state, onLockedRedirect } = opts;
 
+  // ---- Route-change commit throttling (bookmark reliability) ----
+  const COMMIT_THROTTLE_MS = 8000;
+  let lastCommitAt = 0;
+  let pendingTimer: number | null = null;
+
+  function commitThrottled() {
+    if (!scorm.initialized) return;
+
+    const now = Date.now();
+    const since = now - lastCommitAt;
+
+    if (since >= COMMIT_THROTTLE_MS) {
+      scorm.commit();
+      lastCommitAt = now;
+
+      if (pendingTimer != null) {
+        window.clearTimeout(pendingTimer);
+        pendingTimer = null;
+      }
+      return;
+    }
+
+    if (pendingTimer != null) return;
+    pendingTimer = window.setTimeout(() => {
+      pendingTimer = null;
+      if (!scorm.initialized) return;
+      scorm.commit();
+      lastCommitAt = Date.now();
+    }, COMMIT_THROTTLE_MS - since);
+  }
+
   router.beforeEach((to) => {
     const lessonId = (to.meta?.lessonId as string | undefined) || "";
     const chapterId = (to.meta?.chapterId as string | undefined) || "";
@@ -21,7 +56,13 @@ export function installCourseGuards(opts: {
     // Only guard chapter routes
     if (!lessonId || !chapterId) return true;
 
-    if (!isChapterUnlocked(course, state, lessonId)) {
+    // IMPORTANT:
+    // If your unlockRules.ts defines isChapterUnlocked(course, state, lessonId, chapterId),
+    // this is the correct call.
+    // If it currently only accepts (course, state, lessonId), update that function to accept chapterId too.
+    const unlocked = isChapterUnlocked(course, state, lessonId, chapterId);
+
+    if (!unlocked) {
       const unlockedLesson = highestUnlockedLessonId(course, state);
       const target = firstChapterRouteForLesson(course, unlockedLesson);
       onLockedRedirect?.("Complete the previous lesson to unlock this.");
@@ -40,9 +81,13 @@ export function installCourseGuards(opts: {
   router.afterEach((to) => {
     if (!scorm.initialized) return;
 
+    // Bookmark
     scorm.set("cmi.location", to.fullPath);
 
-    // write suspend_data (commit is handled elsewhere / throttled)
+    // Persist suspend_data (state)
     saveProgress(scorm, state);
+
+    // Throttled commit for route-change saves
+    commitThrottled();
   });
 }
