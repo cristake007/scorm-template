@@ -1,5 +1,10 @@
 <template>
-  <component :is="Comp" v-bind="compProps" @quiz-submitted="forwardQuiz" />
+  <component
+    :is="Comp"
+    v-bind="compProps"
+    @quiz-submitted="forwardQuiz"
+    @viewed-ids="forwardViewed"
+  />
 </template>
 
 <script setup lang="ts">
@@ -11,19 +16,19 @@ import VideoYouTubeBlock from "./VideoYouTubeBlock.vue";
 import AudioBlock from "./AudioBlock.vue";
 import QuizClozeSelectBlock from "./QuizClozeSelectBlock.vue";
 import QuizMatchBlock from "./QuizMatchBlock.vue";
+import AccordionBlock from "./AccordionBlock.vue";
+import FlipCardBlock from "./FlipCardBlock.vue";
+import ScrollSentinelBlock from "./ScrollSentinelBlock.vue";
+import TextBlock from "./TextBlock.vue";
+import ImageBlock from "./ImageBlock.vue";
 // import other blocks you have...
 // import TextBlock from "./TextBlock.vue"; etc.
 
 const props = defineProps<{ block: any }>();
 
 const emit = defineEmits<{
-  (e: "quiz-submitted", payload: {
-    quizId: string;
-    raw: number;
-    max: number;
-    passScore: number;
-    responses: Record<string, string | string[]>;
-  }): void;
+  (e: "quiz-submitted", payload: { quizId: string; raw: number; max: number; passScore: number }): void;
+  (e: "viewed-ids", ids: string[]): void;
 }>();
 
 const ctx = inject(AppContextKey);
@@ -41,6 +46,16 @@ const Comp = computed(() => {
       return AudioBlock;
     case "video.youtube":
       return VideoYouTubeBlock;
+    case "accordion":
+      return AccordionBlock;
+    case "flipcard":
+      return FlipCardBlock;
+    case "scroll.sentinel":
+      return ScrollSentinelBlock;
+    case "text":
+      return TextBlock;
+    case "image":
+      return ImageBlock;
     default:
       return "div";
   }
@@ -63,5 +78,9 @@ function forwardQuiz(payload: {
   responses: Record<string, string | string[]>;
 }) {
   emit("quiz-submitted", payload);
+}
+
+function forwardViewed(ids: string[]) {
+  emit("viewed-ids", ids);
 }
 </script>

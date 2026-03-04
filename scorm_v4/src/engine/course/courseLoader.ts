@@ -53,6 +53,35 @@ export type YouTubeBlock = BlockBase & {
   privacyMode?: boolean;
 };
 
+// ---- Accordion block (offline) ----
+export type AccordionItem = {
+  id?: string; // stable tracking id; auto-generated if missing
+  title: string;
+  body: string;
+};
+
+export type AccordionBlock = BlockBase & {
+  type: "accordion";
+  title?: string;
+  items: AccordionItem[];
+  requireAllExpanded?: boolean; // default true
+};
+
+// ---- Flip card block ----
+export type FlipCardBlock = BlockBase & {
+  type: "flipcard";
+  title?: string;
+  front: string;
+  back: string;
+  requireFlip?: boolean; // default true
+};
+
+// ---- Scroll sentinel (end-of-page) ----
+export type ScrollSentinelBlock = BlockBase & {
+  type: "scroll.sentinel";
+  text?: string;
+};
+
 // ---- Quiz blocks (scored) ----
 export type McqQuestion = {
   id: string;
@@ -79,7 +108,14 @@ export type McqQuizBlock = BlockBase & {
   onSubmit?: QuizOnSubmit;
 };
 
-export type Block = TextBlock | ImageBlock | YouTubeBlock | McqQuizBlock;
+export type Block =
+  | TextBlock
+  | ImageBlock
+  | YouTubeBlock
+  | McqQuizBlock
+  | AccordionBlock
+  | FlipCardBlock
+  | ScrollSentinelBlock;
 
 export type PageModel = {
   layout?: LayoutTokens;
@@ -147,7 +183,22 @@ function normalizeBlockIds(chRoute: string, blocks: Block[]) {
   // Assign stable ids if missing: based on order + type
   blocks.forEach((b, idx) => {
     if (!b.id) b.id = `${chRoute}::${b.type}::${idx + 1}`;
-    if (b.requiredView == null) b.requiredView = true;
+
+    // Default requiredView:
+    // - interactive blocks should NOT count as "viewed" just by being visible
+    // - sentinel/text/image/video can stay visibility-based
+    if (b.requiredView == null) {
+      b.requiredView = !(b.type === "accordion" || b.type === "flipcard");
+    }
+  });
+
+  // Normalize accordion item ids (stable for suspend_data)
+  blocks.forEach((b) => {
+    if (b.type !== "accordion") return;
+    const acc = b as any as { id: string; items: any[] };
+    (acc.items ?? []).forEach((it, i) => {
+      if (!it.id) it.id = `${acc.id}::item::${i + 1}`;
+    });
   });
 }
 

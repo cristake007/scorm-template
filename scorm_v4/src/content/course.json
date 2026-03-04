@@ -131,6 +131,68 @@
           }
         }
       ]
-    }
+    },
+    {
+    "id": "lesson-2",
+    "title": "Lesson 2 (Reading)",
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Content + Interactions",
+        "route": "/lesson-2/content",
+        "required": true,
+        "completion": { "mode": "viewed" },
+        "page": {
+          "layout": { "maxWidth": "xl", "gap": "lg" },
+          "blocks": [
+            { "type": "text", "variant": "h1", "text": "Lesson 2 – Content + Interactions" },
+            { "type": "text", "text": "To complete: open all accordion items, flip all cards, then scroll to the bottom." },
+
+            {
+              "type": "accordion",
+              "requiredView": false,
+              "title": "Key points (open all)",
+              "requireAllExpanded": true,
+              "items": [
+                { "title": "Point 1", "body": "Explanation for point 1..." },
+                { "title": "Point 2", "body": "Explanation for point 2..." },
+                { "title": "Point 3", "body": "Explanation for point 3..." }
+              ]
+            },
+
+            { "type": "flipcard", "requiredView": false, "title": "Flip card 1", "front": "Front text", "back": "Back text" },
+            { "type": "flipcard", "requiredView": false, "title": "Flip card 2", "front": "Front text", "back": "Back text" },
+
+            { "type": "image", "src": "./assets/images/your-image.png", "alt": "Example image" },
+
+            { "type": "scroll.sentinel", "text": "Bottom reached ✅ (chapter completes once all interactions are done too)" }
+          ]
+        }
+      },
+      {
+        "id": "ch-2",
+        "title": "Simple Reading (Auto)",
+        "route": "/lesson-2/simple-reading-auto",
+        "required": true,
+        "completion": { "mode": "viewed" },
+        "page": {
+          "blocks": [
+            { "type": "text", "variant": "h1", "text": "Simple Reading (Auto)" },
+            { "type": "text", "text": "Scroll to the end to complete this chapter." },
+
+            { "type": "text", "variant": "h2", "text": "Section 1" },
+            { "type": "text", "text": "Body text..." },
+
+            { "type": "image", "src": "./assets/images/diagram-1.png", "alt": "Diagram 1" },
+
+            { "type": "text", "variant": "h2", "text": "Section 2" },
+            { "type": "text", "text": "More body text..." },
+
+            { "type": "image", "src": "./assets/images/photo-1.jpg", "alt": "Photo 1" }
+          ]
+        }
+      }
+  ]
+}
   ]
 }

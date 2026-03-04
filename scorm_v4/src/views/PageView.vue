@@ -6,7 +6,7 @@
 
     <template v-else>
       <div v-for="block in page.blocks" :key="block.id" class="scorm-block" :data-block-id="block.id">
-        <BlockRenderer :block="block" @quiz-submitted="onQuizSubmitted" />
+        <BlockRenderer :block="block" @quiz-submitted="onQuizSubmitted" @viewed-ids="onViewedIds"/>
       </div>
 
       <div v-if="showManualComplete" class="scorm-card" style="margin-top:14px">
@@ -79,17 +79,12 @@ function isChapterDone(): boolean {
   // manual is only via button
   if (mode === "manual") return false;
 
-  const blocks = ch.page.blocks ?? [];
-
-  // A) viewed condition (ignore quizzes)
   const chKey = `${lessonId}/${chapterId}`;
-  const requiredViewIds = blocks
-    .filter((b: any) => b.requiredView !== false && !String(b.type).startsWith("quiz."))
-    .map((b: any) => b.id)
-    .filter(Boolean) as string[];
 
+  // Use the computed rules (accordion items + flipcards + sentinel + other view blocks)
+  const requiredIds = computeRequiredViewedIds(ch).filter((id) => !!id);
   const viewedIds = state.viewed[chKey] ?? [];
-  const viewedOk = requiredViewIds.every((id) => viewedIds.includes(id));
+  const viewedOk = requiredIds.every((id) => viewedIds.includes(id));
 
   // B) quiz condition: every quiz block has a score entry
   const quizIds = blocks
@@ -151,7 +146,96 @@ function markThisChapterComplete() {
   saveProgress(scorm, state);
   scorm.commit();
 }
+function computeRequiredViewedIds(ch: any): string[] {
+  const out: string[] = [];
 
+  for (const b of ch.page.blocks ?? []) {
+    // For normal blocks, allow opt-out from viewed completion
+    const isInteractive = b.type === "accordion" || b.type === "flipcard";
+    if (!isInteractive && b.requiredView === false) continue;
+
+    // Ignore quizzes in viewed list
+    if (String(b.type).startsWith("quiz.")) continue;
+
+    // Accordion: require each item opened at least once
+    if (b.type === "accordion") {
+      const requireAll = b.requireAllExpanded !== false;
+      if (requireAll) {
+        (b.items ?? []).forEach((it: any, i: number) => {
+          out.push(it.id || `${b.id}::item::${i + 1}`);
+        });
+      } else {
+        out.push(b.id);
+      }
+      continue;
+    }
+
+    // Flipcard: require flipping (emit block id on first flip)
+    if (b.type === "flipcard") {
+      const requireFlip = b.requireFlip !== false;
+      if (requireFlip) out.push(b.id);
+      continue;
+    }
+
+    // Default: normal block id (text/image/video/sentinel/etc.)
+    if (b.id) out.push(b.id);
+  }
+
+  return out;
+}
+
+// function tryCompleteViewedChapter(params: { lessonId: string; chapterId: string }) {
+//   if (!course.value) return;
+
+//   const { lessonId, chapterId } = params;
+//   const ch = course.value.lessons
+//     .find((l) => l.id === lessonId)
+//     ?.chapters.find((c) => c.id === chapterId);
+
+//   if (!ch) return;
+
+//   const mode = ch.completion?.mode;
+//   if (mode !== "viewed" && mode !== "viewed+quiz") return;
+
+//   const state = loadProgress(scorm, course.value);
+//   const chKey = `${lessonId}/${chapterId}`;
+
+//   const requiredIds = computeRequiredViewedIds(ch);
+//   const viewedIds = state.viewed[chKey] ?? [];
+//   const allViewed = requiredIds.every((id) => viewedIds.includes(id));
+
+//   if (allViewed) {
+//     markChapterComplete(state, lessonId, chapterId);
+//     reconcileCourseState({ course: course.value, state, scorm, touchedLessonId: lessonId });
+//   }
+
+//   saveProgress(scorm, state);
+//   scorm.commit();
+// }
+
+function onViewedIds(ids: string[]) {
+  const info = getCurrentChapter();
+  if (!info) return;
+
+  const { lessonId, chapterId, ch } = info;
+  const mode = ch.completion?.mode;
+  if (mode !== "viewed" && mode !== "viewed+quiz") return;
+
+  const chKey = `${lessonId}/${chapterId}`;
+
+  let changed = false;
+  for (const id of ids) {
+    const before = (state.viewed[chKey] ?? []).length;
+    markBlockViewed(state, chKey, id);
+    const after = (state.viewed[chKey] ?? []).length;
+    if (after !== before) changed = true;
+  }
+
+  if (!changed) return;
+
+  // Recompute using "all required items" rule.
+  recomputeChapterCompletion();
+}
 // --- viewed tracking (for completion.mode="viewed" or "viewed+quiz") ---
 let observer: IntersectionObserver | null = null;
 
@@ -179,13 +263,11 @@ function setupViewedObserver() {
         const blockId = el.dataset.blockId || "";
         if (!blockId) continue;
 
-        const blk = ch.page.blocks.find((b) => b.id === blockId);
-        if (!blk || blk.requiredView === false) continue;
-
-        const before = (state.viewed[chKey] ?? []).length;
-        markBlockViewed(state, chKey, blockId);
-        const after = (state.viewed[chKey] ?? []).length;
-        if (after !== before) changed = true;
+      const blk = ch.page.blocks.find((b) => b.id === blockId);
+      if (!blk) continue;
+      if (String(blk.type).startsWith("quiz.")) continue;
+      if (blk.type === "accordion" || blk.type === "flipcard") continue; // interaction tracked only
+      if (blk.requiredView === false) continue;
       }
 
       if (!changed) return;
