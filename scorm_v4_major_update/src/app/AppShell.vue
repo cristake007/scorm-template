@@ -88,7 +88,9 @@
                       </div>
                     </div>
                   </div>
-
+                  <div class="navRow__right">
+                    <v-icon icon="mdi-check-circle-outline" :color="chapter.completed ? 'primary' : 'grey-lighten-1'" />
+                  </div>
                 </div>
               </v-btn>
 
