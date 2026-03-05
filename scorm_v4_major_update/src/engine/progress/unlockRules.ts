@@ -94,3 +94,35 @@ export function firstChapterRouteForLesson(course: CourseModel, lessonId: string
   const lesson = course.lessons.find((l) => l.id === lessonId);
   return lesson?.chapters[0]?.route || "/overview";
 }
+
+export function firstAvailableChapterRouteForLesson(course: CourseModel, state: ProgressStateV1, lessonId: string): string {
+  const lesson = course.lessons.find((l) => l.id === lessonId);
+  if (!lesson) return "/overview";
+
+  const unlocked = lesson.chapters.find((ch) => isChapterUnlocked(course, state, lessonId, ch.id));
+  return unlocked?.route || lesson.chapters[0]?.route || "/overview";
+}
+
+export function nearestAvailableChapterRouteForLesson(
+  course: CourseModel,
+  state: ProgressStateV1,
+  lessonId: string,
+  requestedChapterId: string
+): string {
+  const lesson = course.lessons.find((l) => l.id === lessonId);
+  if (!lesson) return "/overview";
+
+  const requestedBare = normalizeChapterId(requestedChapterId);
+  const requestedIdx = lesson.chapters.findIndex((ch) => ch.id === requestedBare);
+
+  if (requestedIdx <= 0) return firstAvailableChapterRouteForLesson(course, state, lessonId);
+
+  for (let i = requestedIdx - 1; i >= 0; i--) {
+    const candidate = lesson.chapters[i];
+    if (isChapterUnlocked(course, state, lessonId, candidate.id)) {
+      return candidate.route;
+    }
+  }
+
+  return firstAvailableChapterRouteForLesson(course, state, lessonId);
+}

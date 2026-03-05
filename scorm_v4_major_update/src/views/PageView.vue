@@ -13,6 +13,7 @@
         :id="blockDomId(b, idx)"
         :class="['scorm-block', blockStyleClass(b, idx)]"
         :data-block-id="b.id"
+        :data-block-style-key="toKebab(String(b?.id || `idx-${idx}`))"
       >
         <BlockRenderer :block="b" @viewed-ids="onViewedIds" @quiz-submitted="onQuizSubmitted" />
       </div>

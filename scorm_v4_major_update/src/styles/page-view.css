@@ -9,11 +9,7 @@
 }
 
 .scorm-block {
-  transition: transform 180ms ease, box-shadow 180ms ease;
-}
-
-.scorm-block:hover {
-  transform: translateY(-1px);
+  transition: box-shadow 180ms ease, border-color 180ms ease;
 }
 
 .pageView__subtitle {
@@ -47,4 +43,12 @@
 /* Style block independently by id: #block-<id>, .scorm-block--<id> */
 [id^="block-"] {
   scroll-margin-top: 96px;
+}
+
+
+/* Example targeted styling:
+[data-block-style-key="lesson-1-optional-text-1"] .scorm-card { border-color: #99b7dd; }
+*/
+[data-block-style-key] .scorm-card {
+  position: relative;
 }

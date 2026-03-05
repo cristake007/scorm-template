@@ -176,16 +176,18 @@
 
 
 .v-app-bar {
-  backdrop-filter: blur(8px);
-  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: none;
+  background: #ffffff !important;
+  border-bottom: 2px solid #0c4ea3;
 }
 
 .navDrawer {
-  box-shadow: 10px 0 24px rgba(15, 23, 42, 0.08);
+  box-shadow: none;
 }
 
 .navRow--active {
   border-left: 3px solid var(--color-primary);
+  box-shadow: inset 0 0 0 1px rgba(25,118,210,0.08);
 }
 
 .chapterPager__btn {
