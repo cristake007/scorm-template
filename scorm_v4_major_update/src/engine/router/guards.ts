@@ -1,9 +1,11 @@
+// src/engine/router/guards.ts
 import type { Router } from "vue-router";
 import type { CourseModel } from "../course/courseLoader";
 import type { ScormClient } from "../../scorm/scormClient";
 import type { ProgressStateV1 } from "../progress/progressStore";
 import { saveProgress } from "../progress/progressStore";
 
+import { isChapterUnlocked, highestUnlockedLessonId, firstChapterRouteForLesson } from "../progress/unlockRules";
 
 export function installCourseGuards(opts: {
   router: Router;
@@ -37,27 +39,47 @@ export function installCourseGuards(opts: {
     }
 
     if (pendingTimer != null) return;
+
     pendingTimer = window.setTimeout(() => {
       pendingTimer = null;
       if (!scorm.initialized) return;
+
       scorm.commit();
       lastCommitAt = Date.now();
     }, COMMIT_THROTTLE_MS - since);
   }
 
-    router.beforeEach((to) => {
-      const lessonId = (to.meta?.lessonId as string | undefined) || "";
-      const chapterId = (to.meta?.chapterId as string | undefined) || "";
+  // 2-a) Enforce linear unlock BEFORE allowing navigation
+  router.beforeEach((to) => {
+    // Allow system routes freely
+    if (to.meta?.system) return true;
 
-      // Update pointers only for chapter routes
-      if (lessonId && chapterId) {
-        state.currentLessonId = lessonId;
-        state.currentChapterId = `${lessonId}/${chapterId}`;
+    const lessonId = (to.meta?.lessonId as string | undefined) || "";
+    const chapterId = (to.meta?.chapterId as string | undefined) || "";
+
+    // Only enforce lock on chapter routes (lessonId+chapterId)
+    if (lessonId && chapterId) {
+      const unlocked = isChapterUnlocked(course, state, lessonId, chapterId);
+
+      if (!unlocked) {
+        const highest = highestUnlockedLessonId(course, state);
+        const redirectTo = firstChapterRouteForLesson(course, highest);
+
+        onLockedRedirect?.("Complete previous lesson to unlock this.");
+
+        // Prevent accidental redirect loops
+        if (to.fullPath === redirectTo) return true;
+        return redirectTo;
       }
 
-      state.lastRoute = to.fullPath;
-      return true;
-    });
+      // 2-b) Normalize chapterId for state storage (avoid double-prefix if JSON ever changes)
+      state.currentLessonId = lessonId;
+      state.currentChapterId = chapterId.includes("/") ? chapterId : `${lessonId}/${chapterId}`;
+    }
+
+    state.lastRoute = to.fullPath;
+    return true;
+  });
 
   // Bookmark + persist progress on each route change
   router.afterEach((to) => {

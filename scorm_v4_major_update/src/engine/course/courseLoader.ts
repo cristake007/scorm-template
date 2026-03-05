@@ -173,15 +173,15 @@ export type GridBreakpointCols = {
 };
 
 export type GridItem = {
-  id?: string;          // optional stable id for the cell (not required)
-  span?: number;        // column span
-  blocks: Block[];      // nested blocks
+  id?: string; // optional stable id for the cell (not required)
+  span?: number; // column span
+  blocks: Block[]; // nested blocks
 };
 
 export type GridBlock = BlockBase & {
   type: "layout.grid";
-  columns?: GridBreakpointCols;   // responsive columns
-  gap?: "sm" | "md" | "lg";       // spacing between cells
+  columns?: GridBreakpointCols; // responsive columns
+  gap?: "sm" | "md" | "lg"; // spacing between cells
   items: GridItem[];
 };
 
@@ -204,6 +204,7 @@ export type PageModel = {
   blocks: Block[];
 };
 
+// ✅ Explicit unlock fields live on the model (not “unknown JSON extras”)
 export type CourseChapter = {
   id: string;
   title: string;
@@ -211,12 +212,20 @@ export type CourseChapter = {
   required?: boolean; // default true
   completion?: ChapterCompletion;
   page: PageModel;
+
+  // explicit chapter rules
+  locked?: boolean;
+  unlockAfterChapterId?: string;
+  free?: boolean;
 };
 
 export type CourseLesson = {
   id: string;
   title: string;
   chapters: CourseChapter[];
+
+  // explicit lesson rules
+  unlockAfterLessonId?: string;
 };
 
 export type SystemRoute = {
@@ -234,9 +243,12 @@ export type ScoringConfig = {
 export type CourseModel = {
   course: { id: string; title: string; version: string };
   system?: { routes?: SystemRoute[]; fallbackRoute?: string };
-  unlockMode?: "linear";
+
+  // ✅ allow explicit too
+  unlockMode?: "linear" | "explicit";
   completionMode?: "requiredChapters";
   scoring?: ScoringConfig;
+
   lessons: CourseLesson[];
 };
 
@@ -281,12 +293,12 @@ function normalizeBlockIds(chRoute: string, blocks: Block[]) {
   // 4) ✅ Recurse into nested blocks (section + grid)
   blocks.forEach((b) => {
     if (b.type === "section") {
-      const sec = b as any as { blocks?: Block[]; id: string };
+      const sec = b as any as { blocks?: Block[] };
       if (sec.blocks?.length) normalizeBlockIds(`${chRoute}::${b.id}`, sec.blocks);
     }
 
     if (b.type === "layout.grid") {
-      const g = b as any as { items?: Array<{ id?: string; blocks?: Block[] }> };
+      const g = b as any as { items?: Array<{ blocks?: Block[] }> };
       (g.items ?? []).forEach((it, i) => {
         if (it.blocks?.length) normalizeBlockIds(`${chRoute}::${b.id}::cell::${i + 1}`, it.blocks);
       });
@@ -294,10 +306,16 @@ function normalizeBlockIds(chRoute: string, blocks: Block[]) {
   });
 }
 
+function assertUnique(name: string, key: string, seen: Set<string>) {
+  if (seen.has(key)) throw new Error(`Duplicate ${name}: ${key}`);
+  seen.add(key);
+}
+
 export async function loadCourse(): Promise<CourseModel> {
   const mod = await import("../../content/course.json");
   const course = mod.default as CourseModel;
 
+  // defaults
   course.unlockMode ??= "linear";
   course.completionMode ??= "requiredChapters";
   course.scoring ??= { aggregation: "best", passRule: { mode: "anyQuizPassed" } };
@@ -305,14 +323,60 @@ export async function loadCourse(): Promise<CourseModel> {
   course.system ??= { routes: [], fallbackRoute: "/overview" };
   course.system.routes ??= [];
 
-  // Validate + normalize chapters
+  // ---- Validate global uniqueness / collisions ----
+  const lessonIdSet = new Set<string>();
+  const routeSet = new Set<string>();
+
+  // Validate + normalize system routes first (also reserves routes)
+  for (const r of course.system.routes) {
+    if (!r.route?.startsWith("/")) throw new Error(`System route must start with "/": ${r.id}`);
+    if (!r.page?.blocks?.length) throw new Error(`Missing system page.blocks for ${r.id}`);
+
+    assertUnique("system route", r.route, routeSet);
+    normalizeBlockIds(r.route, r.page.blocks);
+  }
+
+  // Validate fallbackRoute is sane (don’t hard fail if missing, but warn by throwing a helpful error)
+  const fb = course.system.fallbackRoute || "/overview";
+  if (!fb.startsWith("/")) throw new Error(`system.fallbackRoute must start with "/": ${fb}`);
+
+  // Build lesson lookup for explicit dependencies
+  const lessonIds = new Set(course.lessons.map((l) => l.id));
+
+  // Validate + normalize lessons/chapters
   for (const lesson of course.lessons) {
+    if (!lesson.id) throw new Error(`Lesson missing id`);
+    assertUnique("lesson id", lesson.id, lessonIdSet);
+
+    // Validate explicit lesson dependency references
+    if (course.unlockMode === "explicit" && lesson.unlockAfterLessonId) {
+      if (!lessonIds.has(lesson.unlockAfterLessonId)) {
+        throw new Error(
+          `Lesson ${lesson.id} unlockAfterLessonId references missing lesson: ${lesson.unlockAfterLessonId}`
+        );
+      }
+      if (lesson.unlockAfterLessonId === lesson.id) {
+        throw new Error(`Lesson ${lesson.id} unlockAfterLessonId cannot reference itself`);
+      }
+    }
+
+    const chapterIdSet = new Set<string>();
+
+    // quick chapter lookup within lesson
+    const chapterIdsInLesson = new Set<string>(lesson.chapters.map((c) => c.id));
+
     for (const ch of lesson.chapters) {
+      if (!ch.id) throw new Error(`Chapter missing id in ${lesson.id}`);
+      assertUnique(`chapter id in ${lesson.id}`, ch.id, chapterIdSet);
+
       ch.required = ch.required ?? true;
+
       if (!ch.route?.startsWith("/")) throw new Error(`Chapter route must start with "/": ${lesson.id}/${ch.id}`);
+      assertUnique("chapter route", ch.route, routeSet);
+
       if (!ch.page?.blocks?.length) throw new Error(`Missing page.blocks for ${lesson.id}/${ch.id}`);
 
-      // assign block ids for viewed tracking (✅ now also covers nested blocks)
+      // assign block ids for viewed tracking (✅ also covers nested blocks)
       normalizeBlockIds(ch.route, ch.page.blocks);
 
       // default completion mode:
@@ -321,14 +385,41 @@ export async function loadCourse(): Promise<CourseModel> {
       if (!mode) {
         ch.completion = { mode: hasQuiz ? "quiz" : "viewed" };
       }
-    }
-  }
 
-  // Validate system routes too
-  for (const r of course.system.routes) {
-    if (!r.route?.startsWith("/")) throw new Error(`System route must start with "/": ${r.id}`);
-    if (!r.page?.blocks?.length) throw new Error(`Missing system page.blocks for ${r.id}`);
-    normalizeBlockIds(r.route, r.page.blocks);
+      // ---- Explicit chapter lock validation (only when unlockMode=explicit) ----
+      if (course.unlockMode === "explicit") {
+        if (ch.free === true) {
+          // free chapter: must not be "locked" at the same time
+          if (ch.locked === true) {
+            throw new Error(`Chapter ${lesson.id}/${ch.id} cannot have both free=true and locked=true`);
+          }
+        }
+
+        if (ch.unlockAfterChapterId) {
+          if (!chapterIdsInLesson.has(ch.unlockAfterChapterId)) {
+            throw new Error(
+              `Chapter ${lesson.id}/${ch.id} unlockAfterChapterId references missing chapter in same lesson: ${ch.unlockAfterChapterId}`
+            );
+          }
+          if (ch.unlockAfterChapterId === ch.id) {
+            throw new Error(`Chapter ${lesson.id}/${ch.id} unlockAfterChapterId cannot reference itself`);
+          }
+        }
+
+        // If explicitly locked, require some way to unlock (either unlockAfterChapterId or a previous chapter exists)
+        if (ch.locked === true && ch.free !== true) {
+          const idx = lesson.chapters.findIndex((x) => x.id === ch.id);
+          const hasPrev = idx > 0 && !!lesson.chapters[idx - 1]?.id;
+          const hasExplicitPrereq = !!ch.unlockAfterChapterId;
+
+          if (!hasPrev && !hasExplicitPrereq) {
+            throw new Error(
+              `Chapter ${lesson.id}/${ch.id} is locked but has no previous chapter and no unlockAfterChapterId`
+            );
+          }
+        }
+      }
+    }
   }
 
   return course;

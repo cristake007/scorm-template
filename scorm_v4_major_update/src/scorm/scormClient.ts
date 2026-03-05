@@ -1,9 +1,5 @@
 // src/scorm/scormClient.ts
 // SCORM 2004 3rd Ed runtime adapter (API_1484_11) - STRICT (no mock).
-// - Finds API safely through window/parent/opener chains
-// - Guards Initialize/Terminate calls
-// - Provides commit throttling helpers
-// - Provides scoring helpers (cmi.score.*, success_status, completion_status)
 
 export type ScormLastError = {
   code: string;
@@ -48,15 +44,10 @@ export interface ScormClient {
 
   // JSON helpers
   setJson(key: string, value: unknown): boolean;
-  getJson<T>(key: string): T | null;
+  getJson<T = any>(key: string): T | null;
 
   // Scoring helpers (course-level)
-  setScore(params: {
-    raw: number;
-    max: number;
-    min?: number;
-    passed?: boolean; // sets cmi.success_status passed/failed if provided
-  }): void;
+  setScore(params: { raw: number; max: number; min?: number; passed?: boolean }): void;
 
   setCompletion(params: {
     completionStatus?: "completed" | "incomplete" | "not attempted" | "unknown";
@@ -116,7 +107,6 @@ function findApi2004(maxDepth: number): Api2004 | null {
 
   for (const start of candidates) {
     let w: Window | null = start;
-
     for (let i = 0; i < maxDepth && w; i++) {
       if (seen.has(w)) break;
       seen.add(w);
@@ -204,6 +194,7 @@ export function createScormClientStrict(options?: { maxSearchDepth?: number }): 
 
   const maxSearchDepth = options?.maxSearchDepth ?? 25;
   const adapter = createLiveAdapter(maxSearchDepth);
+
   let sessionStartedAtMs = 0;
 
   const client: ScormClient = {
@@ -216,16 +207,18 @@ export function createScormClientStrict(options?: { maxSearchDepth?: number }): 
 
       const res = adapter.call.Initialize();
       client.initialized = ok(res);
+
       if (client.initialized) {
         sessionStartedAtMs = Date.now();
 
-        // Allow resume by default; change to "normal" when course truly finished if you want.
+        // Allow resume by default
         client.set("cmi.exit", "suspend");
 
-        // Some LMS like explicit start state
+        // Ensure some LMS have an explicit start state
         const cs = client.get("cmi.completion_status");
         if (!cs) client.set("cmi.completion_status", "incomplete");
       }
+
       return client.initialized;
     },
 
@@ -233,19 +226,19 @@ export function createScormClientStrict(options?: { maxSearchDepth?: number }): 
       if (!client.apiFound) return false;
       if (!client.initialized) return true;
 
-      // Best-effort: finalize attempt so LMS dashboards update
+      // Best-effort finalize attempt so LMS dashboards update
       try {
         // If you do NOT want resume, use "normal"
         client.set("cmi.exit", "normal");
 
-        // SCORM 2004 session_time: HH:MM:SS (or HH:MM:SS.ss)
+        // SCORM 2004 session_time: HH:MM:SS
         const started = sessionStartedAtMs || Date.now();
         const sec = Math.max(0, Math.round((Date.now() - started) / 1000));
         const hh = String(Math.floor(sec / 3600)).padStart(2, "0");
         const mm = String(Math.floor((sec % 3600) / 60)).padStart(2, "0");
         const ss = String(sec % 60).padStart(2, "0");
-        client.set("cmi.session_time", `${hh}:${mm}:${ss}`);
 
+        client.set("cmi.session_time", `${hh}:${mm}:${ss}`);
         client.commit();
       } catch {
         // ignore
@@ -277,6 +270,7 @@ export function createScormClientStrict(options?: { maxSearchDepth?: number }): 
     getLastError(): ScormLastError {
       const code = adapter.call.GetLastError() ?? "0";
       if (!code || code === "0") return { code: "0", message: "", diagnostic: "" };
+
       return {
         code,
         message: adapter.call.GetErrorString(code) ?? "",
@@ -288,14 +282,13 @@ export function createScormClientStrict(options?: { maxSearchDepth?: number }): 
       return client.set(key, safeJsonStringify(value));
     },
 
-    getJson<T>(key: string): T | null {
+    getJson<T = any>(key: string): T | null {
       const s = client.get(key);
       if (!s) return null;
       return safeJsonParse<T>(s);
     },
 
     setScore({ raw, max, min = 0, passed }: { raw: number; max: number; min?: number; passed?: boolean }) {
-      // SCORM expects strings; keep simple formatting
       const rawStr = Number.isFinite(raw) ? String(raw) : "0";
       const maxStr = Number.isFinite(max) ? String(max) : "100";
       const minStr = Number.isFinite(min) ? String(min) : "0";
@@ -322,47 +315,6 @@ export function createScormClientStrict(options?: { maxSearchDepth?: number }): 
 
   _scorm = client;
   return client;
-}
-
-// ---------- helpers: throttle + router/exit wiring ----------
-type ThrottleFn = () => void;
-
-function throttle(ms: number, fn: () => void): ThrottleFn {
-  let last = 0;
-  let t: number | null = null;
-
-  return () => {
-    const now = Date.now();
-    const remaining = ms - (now - last);
-
-    if (remaining <= 0) {
-      last = now;
-      fn();
-      return;
-    }
-
-    if (t != null) return;
-    t = window.setTimeout(() => {
-      t = null;
-      last = Date.now();
-      fn();
-    }, remaining);
-  };
-}
-
-/**
- * Router afterEach hook:
- * - writes cmi.location to route.fullPath (bookmark)
- * - commits throttled
- */
-export function installScormRouterHooks(router: any, scorm: ScormClient, commitThrottleMs = 8000) {
-  const commitThrottled = throttle(commitThrottleMs, () => scorm.commit());
-
-  router.afterEach((to: any) => {
-    if (!scorm.initialized) return;
-    scorm.set("cmi.location", to.fullPath);
-    commitThrottled();
-  });
 }
 
 /**
@@ -406,6 +358,7 @@ export function installScormAutoCommit(scorm: ScormClient, intervalMs = 60000) {
       }
     }
   };
+
   document.addEventListener("visibilitychange", onVis);
 
   return () => {

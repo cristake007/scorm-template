@@ -1,5 +1,5 @@
 {
-  "course": { "id": "scorm-v4", "title": "SCORM v4 Template", "version": "4.0.0" },
+  "course": { "id": "scorm-v4-explicit", "title": "SCORM v4 Template — Explicit Unlocks + Grid Power", "version": "4.1.0" },
 
   "system": {
     "routes": [
@@ -11,7 +11,27 @@
           "layout": { "maxWidth": "xl", "gap": "lg" },
           "blocks": [
             { "type": "text", "variant": "h1", "text": "Overview" },
-            { "type": "text", "variant": "muted", "text": "Select a chapter from the navigation." }
+            { "type": "text", "variant": "muted", "text": "Select a chapter from the navigation." },
+            {
+              "type": "section",
+              "id": "ovr-howto",
+              "title": "How unlocking works in this demo",
+              "variant": "card",
+              "padding": "lg",
+              "blocks": [
+                { "type": "text", "variant": "muted", "text": "Lesson locking + explicit chapter locking are enabled." },
+                {
+                  "type": "iconList",
+                  "id": "ovr-icons",
+                  "items": [
+                    { "icon": "info", "label": "Lesson 1", "text": "Free (unlocked by default)." },
+                    { "icon": "lock", "label": "Lesson 2", "text": "Unlocks after Lesson 1 is completed." },
+                    { "icon": "lock", "label": "Lesson 3", "text": "Unlocks after Lesson 2 is completed." },
+                    { "icon": "book", "label": "Chapters", "text": "Some chapters are explicitly locked; a bonus chapter is free." }
+                  ]
+                }
+              ]
+            }
           ]
         }
       }
@@ -19,25 +39,83 @@
     "fallbackRoute": "/overview"
   },
 
-  "unlockMode": "linear",
+  "unlockMode": "explicit",
   "completionMode": "requiredChapters",
   "scoring": { "aggregation": "best", "passRule": { "mode": "anyQuizPassed" } },
 
   "lessons": [
     {
       "id": "lesson-1",
-      "title": "Lesson 1",
+      "title": "Lesson 1 (Free)",
       "chapters": [
         {
           "id": "ch-1",
-          "title": "Intro (Quizzes)",
+          "title": "Intro (Quizzes + basics)",
           "route": "/lesson-1/intro",
           "required": true,
           "completion": { "mode": "quiz" },
           "page": {
             "layout": { "maxWidth": "xl", "gap": "lg" },
             "blocks": [
-              { "type": "text", "variant": "h1", "text": "Intro" },
+              { "type": "text", "variant": "h1", "text": "Lesson 1 — Intro" },
+              { "type": "text", "variant": "muted", "text": "Complete the quiz to unlock Lesson 2." },
+
+              {
+                "type": "layout.grid",
+                "id": "l1-grid-hero",
+                "columns": { "sm": 1, "md": 2, "lg": 3 },
+                "gap": "lg",
+                "items": [
+                  {
+                    "id": "l1-cell-hero",
+                    "span": 2,
+                    "blocks": [
+                      { "type": "text", "variant": "h2", "text": "Hero (span=2)" },
+                      { "type": "text", "variant": "muted", "text": "This is a wide cell. Put text, video, image, quiz… anything." },
+                      {
+                        "type": "video.youtube",
+                        "title": "Watch this first",
+                        "mode": "embed",
+                        "videoId": "dQw4w9WgXcQ",
+                        "start": 10,
+                        "privacyMode": true
+                      }
+                    ]
+                  },
+                  {
+                    "id": "l1-cell-img",
+                    "blocks": [
+                      { "type": "text", "variant": "h2", "text": "Image card" },
+                      { "type": "image", "src": "./assets/images/diagram-1.png", "alt": "Process diagram", "ratio": "16/9", "rounded": "lg" },
+                      { "type": "text", "text": "Images should be local (relative paths)." }
+                    ]
+                  },
+                  {
+                    "id": "l1-cell-note",
+                    "blocks": [
+                      {
+                        "type": "section",
+                        "id": "l1-sec",
+                        "title": "Key note",
+                        "variant": "card",
+                        "padding": "lg",
+                        "blocks": [
+                          { "type": "text", "variant": "muted", "text": "Sections can be nested inside grid cells." },
+                          {
+                            "type": "iconList",
+                            "id": "l1-icons",
+                            "items": [
+                              { "icon": "book", "label": "SCORM", "text": "Sharable Content Object Reference Model" },
+                              { "icon": "info", "label": "Bookmark", "text": "Stored in cmi.location (route)" },
+                              { "icon": "book", "label": "State", "text": "Stored as JSON in cmi.suspend_data" }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
 
               {
                 "type": "quiz.mcq",
@@ -73,25 +151,57 @@
               }
             ]
           }
+        },
+        {
+          "id": "ch-2",
+          "title": "Optional (free in completion sense)",
+          "route": "/lesson-1/optional",
+          "required": false,
+          "completion": { "mode": "viewed" },
+          "page": {
+            "layout": { "maxWidth": "xl", "gap": "lg" },
+            "blocks": [
+              { "type": "text", "variant": "h1", "text": "Optional chapter" },
+              { "type": "text", "variant": "muted", "text": "Not required, does not block lesson completion." },
+              { "type": "scroll.sentinel", "text": "Bottom reached ✅" }
+            ]
+          }
         }
       ]
     },
 
     {
       "id": "lesson-2",
-      "title": "Lesson 2 (Layout demo)",
+      "title": "Lesson 2 (Explicit chapter locks + grid showcase)",
+      "unlockAfterLessonId": "lesson-1",
       "chapters": [
         {
-          "id": "ch-2",
-          "title": "Simple Reading + Section",
-          "route": "/lesson-2/section-demo",
+          "id": "ch-1",
+          "title": "Step 1 (Viewed)",
+          "route": "/lesson-2/step-1",
           "required": true,
           "completion": { "mode": "viewed" },
           "page": {
             "layout": { "maxWidth": "xl", "gap": "lg" },
             "blocks": [
-              { "type": "text", "variant": "h1", "text": "Section + Icon List demo" },
-              { "type": "text", "text": "Below is a nested section that should render." },
+              { "type": "text", "variant": "h1", "text": "Lesson 2 — Step 1" },
+              { "type": "text", "variant": "muted", "text": "This is the first chapter in Lesson 2." },
+              { "type": "scroll.sentinel", "text": "Bottom reached ✅" }
+            ]
+          }
+        },
+
+        {
+          "id": "ch-2",
+          "title": "Grid Mega Demo (Viewed)",
+          "route": "/lesson-2/grid-mega",
+          "required": true,
+          "completion": { "mode": "viewed" },
+          "page": {
+            "layout": { "maxWidth": "xl", "gap": "lg" },
+            "blocks": [
+              { "type": "text", "variant": "h1", "text": "Grid Mega Demo" },
+              { "type": "text", "text": "Below is a heavy layout showcasing span-based composition and mixed content blocks." },
 
               {
                 "type": "section",
@@ -113,23 +223,18 @@
                 ]
               },
 
-
               {
                 "type": "layout.grid",
                 "id": "g-intro-mixed",
-                "columns": { "sm": 1, "md": 2, "lg": 3 },
+                "columns": { "sm": 1, "md": 2, "lg": 6 },
                 "gap": "lg",
                 "items": [
                   {
                     "id": "cell-hero",
-                    "span": 2,
+                    "span": 4,
                     "blocks": [
-                      { "type": "text", "variant": "h1", "text": "Chapter Title — Overview" },
-                      {
-                        "type": "text",
-                        "variant": "muted",
-                        "text": "Read the short intro, watch the video, then answer the quick check."
-                      },
+                      { "type": "text", "variant": "h1", "text": "Hero area — Overview" },
+                      { "type": "text", "variant": "muted", "text": "Large hero spanning 4/6 columns (lg)." },
                       {
                         "type": "video.youtube",
                         "title": "Watch this first",
@@ -142,22 +247,28 @@
                   },
 
                   {
-                    "id": "cell-image",
+                    "id": "cell-image-a",
+                    "span": 2,
                     "blocks": [
-                      { "type": "text", "variant": "h2", "text": "Diagram" },
-                      {
-                        "type": "image",
-                        "src": "./assets/images/diagram-1.png",
-                        "alt": "Process diagram",
-                        "ratio": "16/9",
-                        "rounded": "lg"
-                      },
-                      { "type": "text", "text": "Key idea: this diagram represents the flow from A → B → C." }
+                      { "type": "text", "variant": "h2", "text": "Diagram A" },
+                      { "type": "image", "src": "./assets/images/diagram-1.png", "alt": "Process diagram", "ratio": "16/9", "rounded": "lg" },
+                      { "type": "text", "text": "Compact card, 2 columns." }
+                    ]
+                  },
+
+                  {
+                    "id": "cell-image-b",
+                    "span": 2,
+                    "blocks": [
+                      { "type": "text", "variant": "h2", "text": "Diagram B" },
+                      { "type": "image", "src": "./assets/images/diagram-2.png", "alt": "Second diagram", "ratio": "16/9", "rounded": "lg" },
+                      { "type": "text", "text": "Another compact card." }
                     ]
                   },
 
                   {
                     "id": "cell-section",
+                    "span": 2,
                     "blocks": [
                       {
                         "type": "section",
@@ -183,7 +294,7 @@
 
                   {
                     "id": "cell-quiz",
-                    "span": 2,
+                    "span": 4,
                     "blocks": [
                       {
                         "type": "quiz.mcq",
@@ -221,19 +332,16 @@
 
                   {
                     "id": "cell-video-link",
+                    "span": 2,
                     "blocks": [
                       { "type": "text", "variant": "h2", "text": "Optional video (opens in new tab)" },
-                      {
-                        "type": "video.youtube",
-                        "title": "Optional: Deep dive",
-                        "mode": "link",
-                        "videoId": "3RsmRMqX2IY"
-                      }
+                      { "type": "video.youtube", "title": "Optional: Deep dive", "mode": "link", "videoId": "3RsmRMqX2IY" }
                     ]
                   },
 
                   {
                     "id": "cell-end",
+                    "span": 2,
                     "blocks": [
                       { "type": "text", "text": "When you’re done, scroll to the bottom." },
                       { "type": "scroll.sentinel", "text": "Bottom reached ✅" }
@@ -243,6 +351,143 @@
               },
 
               { "type": "scroll.sentinel", "text": "Bottom reached ✅" }
+            ]
+          }
+        },
+
+        {
+          "id": "ch-3",
+          "title": "Locked chapter (unlocks after Grid Mega Demo)",
+          "route": "/lesson-2/locked-3",
+          "required": true,
+          "locked": true,
+          "unlockAfterChapterId": "ch-2",
+          "completion": { "mode": "manual" },
+          "page": {
+            "layout": { "maxWidth": "xl", "gap": "lg" },
+            "blocks": [
+              { "type": "text", "variant": "h1", "text": "Locked Chapter (ch-3)" },
+              { "type": "text", "variant": "muted", "text": "This chapter is explicitly locked until Lesson 2 / ch-2 is completed." },
+              { "type": "completion.button", "label": "Mark this chapter complete" }
+            ]
+          }
+        },
+
+        {
+          "id": "ch-4",
+          "title": "Locked chain (unlocks after ch-3)",
+          "route": "/lesson-2/locked-4",
+          "required": false,
+          "locked": true,
+          "unlockAfterChapterId": "ch-3",
+          "completion": { "mode": "manual" },
+          "page": {
+            "layout": { "maxWidth": "xl", "gap": "lg" },
+            "blocks": [
+              { "type": "text", "variant": "h1", "text": "Locked Chain Chapter (ch-4)" },
+              { "type": "text", "variant": "muted", "text": "Demonstrates chained unlocking." }
+            ]
+          }
+        },
+
+        {
+          "id": "ch-bonus",
+          "title": "Bonus (free bypass)",
+          "route": "/lesson-2/bonus",
+          "required": false,
+          "free": true,
+          "completion": { "mode": "viewed" },
+          "page": {
+            "layout": { "maxWidth": "xl", "gap": "lg" },
+            "blocks": [
+              { "type": "text", "variant": "h1", "text": "Bonus (free chapter)" },
+              { "type": "text", "variant": "muted", "text": "free=true means it’s accessible once Lesson 2 is unlocked, regardless of locked chapters." },
+              { "type": "scroll.sentinel", "text": "Bottom reached ✅" }
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "lesson-3",
+      "title": "Lesson 3 (locked until Lesson 2 completed)",
+      "unlockAfterLessonId": "lesson-2",
+      "chapters": [
+        {
+          "id": "ch-1",
+          "title": "Final quiz + grid wrap-up",
+          "route": "/lesson-3/final",
+          "required": true,
+          "completion": { "mode": "quiz" },
+          "page": {
+            "layout": { "maxWidth": "xl", "gap": "lg" },
+            "blocks": [
+              { "type": "text", "variant": "h1", "text": "Final checkpoint" },
+              { "type": "text", "variant": "muted", "text": "Passing this quiz can be used for course success logic." },
+
+              {
+                "type": "layout.grid",
+                "id": "l3-grid",
+                "columns": { "sm": 1, "md": 2, "lg": 3 },
+                "gap": "lg",
+                "items": [
+                  {
+                    "id": "l3-hero",
+                    "span": 2,
+                    "blocks": [
+                      { "type": "text", "variant": "h2", "text": "Big quiz card (span=2)" },
+                      {
+                        "type": "quiz.mcq",
+                        "quizId": "final-quiz",
+                        "title": "Final quiz",
+                        "scoreMax": 100,
+                        "passScore": 80,
+                        "attemptsAllowed": 0,
+                        "shuffleOptions": true,
+                        "questions": [
+                          {
+                            "id": "q1",
+                            "prompt": "Which SCORM field stores the bookmark route?",
+                            "options": [
+                              { "id": "a", "text": "cmi.location" },
+                              { "id": "b", "text": "cmi.mode" },
+                              { "id": "c", "text": "cmi.progress_measure" }
+                            ],
+                            "correct": ["a"]
+                          },
+                          {
+                            "id": "q2",
+                            "prompt": "What field stores our progress JSON?",
+                            "options": [
+                              { "id": "a", "text": "cmi.suspend_data" },
+                              { "id": "b", "text": "cmi.exit" },
+                              { "id": "c", "text": "cmi.session_time" }
+                            ],
+                            "correct": ["a"]
+                          }
+                        ],
+                        "onSubmit": { "markChapterComplete": true, "commit": true }
+                      }
+                    ]
+                  },
+                  {
+                    "id": "l3-side-a",
+                    "blocks": [
+                      { "type": "image", "src": "./assets/images/final-a.jpg", "alt": "Final A", "ratio": "16/9", "rounded": "lg" },
+                      { "type": "text", "variant": "muted", "text": "Compact image card." }
+                    ]
+                  },
+                  {
+                    "id": "l3-side-b",
+                    "blocks": [
+                      { "type": "section", "id": "l3-sec", "title": "Exit tip", "variant": "card", "padding": "lg", "blocks": [
+                        { "type": "text", "variant": "muted", "text": "Use the Exit button to trigger terminate()." }
+                      ] }
+                    ]
+                  }
+                ]
+              }
             ]
           }
         }

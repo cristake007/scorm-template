@@ -121,7 +121,7 @@
 
                 <div class="navRow__right">
                   <v-icon
-                    :icon="ch.completed ? 'mdi-check-circle' : 'mdi-check-circle-outline'"
+                    :icon="ch.completed ? 'mdi-check-circle-outline' : 'mdi-check-circle-outline'"
                     :color="ch.completed ? 'primary' : 'grey-lighten-1'"
                   />
                 </div>

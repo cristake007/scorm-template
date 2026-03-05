@@ -1,73 +1,201 @@
 <template>
-  <div class="scorm-page">
-    <div v-if="!page" class="scorm-card">
-      <div class="scorm-muted">Page not found.</div>
+  <div class="pageRoot">
+    <div v-if="title" class="scorm-h1">{{ title }}</div>
+
+    <div v-if="subtitle" class="scorm-muted" style="margin-bottom: 10px">
+      {{ subtitle }}
     </div>
 
-    <template v-else>
-      <div v-for="block in page.blocks" :key="block.id" class="scorm-block" :data-block-id="block.id">
-        <BlockRenderer :block="block" @quiz-submitted="onQuizSubmitted" @viewed-ids="onViewedIds"/>
+    <div ref="pageEl" class="pageBlocks">
+      <div
+        v-for="(b, idx) in blocks"
+        :key="b.id || idx"
+        class="scorm-block"
+        :data-block-id="b.id"
+      >
+        <BlockRenderer :block="b" @viewed-ids="onViewedIds" @quiz-submitted="onQuizSubmitted" />
       </div>
+    </div>
 
-      <div v-if="showManualComplete" class="scorm-card" style="margin-top:14px">
-        <v-btn @click="markThisChapterComplete">Mark chapter complete</v-btn>
-      </div>
-    </template>
+    <!-- Manual completion button (if chapter completion.mode === manual) -->
+    <div v-if="showManualComplete" class="manualCompleteWrap">
+      <v-btn color="primary" variant="flat" @click="onManualComplete">
+        Mark chapter complete
+      </v-btn>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, inject, onBeforeUnmount, onMounted, watch } from "vue";
+import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 import BlockRenderer from "../blocks/BlockRenderer.vue";
-import type { PageModel } from "../engine/course/courseLoader";
 
 import { AppContextKey } from "../engine/appContext";
-import { loadProgress, saveProgress, markBlockViewed, markChapterComplete } from "../engine/progress/progressStore";
-import { recordInteraction } from "../scorm/scormInteractions";
-import { recordQuizAttempt } from "../engine/progress/progressStore";
-import { reconcileCourseState } from "../engine/progress/completion";
+
+// ---- helpers: walk nested blocks (section + grid) ----
+type AnyBlock = any;
+
+/** Depth-first list of all blocks, including nested blocks inside section + layout.grid */
+function flattenBlocks(blocks: AnyBlock[]): AnyBlock[] {
+  const out: AnyBlock[] = [];
+  const walk = (arr: AnyBlock[]) => {
+    for (const b of arr ?? []) {
+      out.push(b);
+      if (b?.type === "section" && Array.isArray(b.blocks)) {
+        walk(b.blocks);
+      }
+      if (b?.type === "layout.grid" && Array.isArray(b.items)) {
+        for (const it of b.items) {
+          if (Array.isArray(it?.blocks)) walk(it.blocks);
+        }
+      }
+    }
+  };
+  walk(blocks ?? []);
+  return out;
+}
+
+function findBlockById(blocks: AnyBlock[], id: string): AnyBlock | undefined {
+  return flattenBlocks(blocks).find((b) => b?.id === id);
+}
+
+import {
+  markChapterComplete,
+  recordQuizAttempt,
+  reconcileCourseState,
+  saveProgress
+} from "../engine/progress/progressStore";
 
 const route = useRoute();
 
 const ctx = inject(AppContextKey);
-if (!ctx) throw new Error("AppContext not provided");
-const { course, scorm, state } = ctx;
+if (!ctx) throw new Error("Missing AppContext");
 
-const page = computed<PageModel | null>(() => {
-  if (route.meta?.system) {
-    const id = route.meta.systemId as string;
-    return course.system?.routes?.find((r) => r.id === id)?.page ?? null;
-  }
+const { course, state, scorm } = ctx;
 
-  const lessonId = route.meta.lessonId as string | undefined;
-  const chapterId = route.meta.chapterId as string | undefined;
-  if (!lessonId || !chapterId) return null;
-
-  const lesson = course.lessons.find((l) => l.id === lessonId);
-  const ch = lesson?.chapters.find((c) => c.id === chapterId);
-  return ch?.page ?? null;
-});
-
-const showManualComplete = computed(() => {
-  const lessonId = route.meta.lessonId as string | undefined;
-  const chapterId = route.meta.chapterId as string | undefined;
-  if (!lessonId || !chapterId) return false;
-  const ch = course.lessons.find((l) => l.id === lessonId)?.chapters.find((c) => c.id === chapterId);
-  return ch?.completion?.mode === "manual";
-});
+const pageEl = ref<HTMLElement | null>(null);
+let observer: IntersectionObserver | null = null;
 
 function getCurrentChapter() {
-  const lessonId = route.meta.lessonId as string | undefined;
-  const chapterId = route.meta.chapterId as string | undefined;
+  const meta: any = route.meta ?? {};
+  const lessonId = meta.lessonId as string | undefined;
+  const chapterId = meta.chapterId as string | undefined;
+
   if (!lessonId || !chapterId) return null;
 
   const lesson = course.lessons.find((l) => l.id === lessonId);
   const ch = lesson?.chapters.find((c) => c.id === chapterId);
+
   if (!lesson || !ch) return null;
 
   return { lessonId, chapterId, lesson, ch };
+}
+
+const pageModel = computed(() => {
+  // System route?
+  const meta: any = route.meta ?? {};
+  if (meta.system) {
+    const systemId = meta.systemId as string;
+    const r = (course.system?.routes ?? []).find((x) => x.id === systemId);
+    return r?.page ?? null;
+  }
+
+  const info = getCurrentChapter();
+  return info?.ch?.page ?? null;
+});
+
+const blocks = computed(() => pageModel.value?.blocks ?? []);
+const title = computed(() => {
+  // Support title/subtitle if you have them; otherwise this stays empty
+  return "";
+});
+const subtitle = computed(() => "");
+
+const showManualComplete = computed(() => {
+  const info = getCurrentChapter();
+  if (!info) return false;
+  return (info.ch.completion?.mode ?? "manual") === "manual";
+});
+
+function setupViewedObserver() {
+  if (!pageEl.value) return;
+
+  if (observer) observer.disconnect();
+
+  observer = new IntersectionObserver(
+    (entries) => {
+      const info = getCurrentChapter();
+      if (!info) return;
+
+      const { lessonId, chapterId, ch } = info;
+
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+
+        const el = e.target as HTMLElement;
+        const blockId = el.dataset.blockId;
+        if (!blockId) continue;
+
+        // ✅ IMPORTANT: must find nested blocks too (section/grid children)
+        const blk = findBlockById(ch.page.blocks ?? [], blockId);
+        if (!blk) continue;
+
+        // ignore decorative blocks
+        if (blk.requiredView === false) continue;
+
+        // ignore quiz blocks in "viewed" tracking
+        if (String(blk.type).startsWith("quiz.")) continue;
+
+        // record viewed
+        const key = `${lessonId}/${chapterId}`;
+        const curr = state.viewed[key] ?? [];
+        if (!curr.includes(blockId)) {
+          state.viewed[key] = [...curr, blockId];
+        }
+      }
+
+      // after we mark viewed, recompute completion
+      recomputeChapterCompletion();
+    },
+    { threshold: 0.35 }
+  );
+
+  // observe all scorm-block wrappers (top + nested)
+  const nodes = pageEl.value.querySelectorAll<HTMLElement>(".scorm-block[data-block-id]");
+  nodes.forEach((n) => observer?.observe(n));
+}
+
+function onViewedIds(ids: string[]) {
+  const info = getCurrentChapter();
+  if (!info) return;
+
+  const { lessonId, chapterId } = info;
+  const key = `${lessonId}/${chapterId}`;
+
+  const curr = state.viewed[key] ?? [];
+  let next = curr;
+
+  for (const id of ids) {
+    if (!next.includes(id)) next = [...next, id];
+  }
+
+  if (next !== curr) state.viewed[key] = next;
+
+  recomputeChapterCompletion();
+}
+
+function onManualComplete() {
+  const info = getCurrentChapter();
+  if (!info) return;
+
+  const { lessonId, chapterId } = info;
+  markChapterComplete(state, lessonId, chapterId);
+
+  reconcileCourseState({ course, state, scorm, touchedLessonId: lessonId });
+  saveProgress(scorm, state);
+  scorm.commit();
 }
 
 function isChapterDone(): boolean {
@@ -80,7 +208,8 @@ function isChapterDone(): boolean {
   // manual is only via button
   if (mode === "manual") return false;
 
-  const blocks = ch.page.blocks ?? [];
+  // ✅ IMPORTANT: completion must include nested blocks (section/grid)
+  const blocks = flattenBlocks(ch.page.blocks ?? []);
 
   // A) viewed condition (ignore quizzes)
   const chKey = `${lessonId}/${chapterId}`;
@@ -147,229 +276,83 @@ function onQuizSubmitted(payload: {
   });
 
   // Write SCORM interaction(s) for ILIAS reports (SCORM-valid learner_response formats)
-try {
-  const isMatch = payload.quizId.includes("match");
-  const isCloze = payload.quizId.includes("cloze");
-  const passed = payload.raw >= payload.passScore;
+  try {
+    const isMatch = payload.quizId.includes("match");
+    const isCloze = payload.quizId.includes("cloze");
+    const passed = payload.raw >= payload.passScore;
 
-  if (isMatch) {
-    // SCORM 2004 matching learner_response format:
-    // "leftId[.]rightId[,]leftId2[.]rightId2"
-    const pairs: string[] = [];
-    for (const [rightId, leftIdVal] of Object.entries(payload.responses ?? {})) {
-      const leftId = Array.isArray(leftIdVal) ? (leftIdVal[0] ?? "") : String(leftIdVal ?? "");
-      if (!leftId || !rightId) continue;
-      pairs.push(`${leftId}[.]${rightId}`);
+    if (isMatch) {
+      // SCORM 2004 matching learner_response format:
+      // "leftId[.]rightId[,]leftId2[.]rightId2"
+      const pairs: string[] = [];
+      for (const [k, v] of Object.entries(payload.responses)) {
+        pairs.push(`${k}.${String(v)}`);
+      }
+      // One interaction per quiz
+      const n = Number(scorm.get("cmi.interactions._count") || "0");
+      scorm.set(`cmi.interactions.${n}.id`, payload.quizId);
+      scorm.set(`cmi.interactions.${n}.type`, "matching");
+      scorm.set(`cmi.interactions.${n}.learner_response`, pairs.join(","));
+      scorm.set(`cmi.interactions.${n}.result`, passed ? "correct" : "wrong");
+    } else if (isCloze) {
+      // SCORM 2004 fill-in learner_response:
+      // "blank1=word1[,]blank2=word2"
+      const parts: string[] = [];
+      for (const [k, v] of Object.entries(payload.responses)) {
+        parts.push(`${k}=${String(v)}`);
+      }
+      const n = Number(scorm.get("cmi.interactions._count") || "0");
+      scorm.set(`cmi.interactions.${n}.id`, payload.quizId);
+      scorm.set(`cmi.interactions.${n}.type`, "fill-in");
+      scorm.set(`cmi.interactions.${n}.learner_response`, parts.join(","));
+      scorm.set(`cmi.interactions.${n}.result`, passed ? "correct" : "wrong");
+    } else {
+      // default choice
+      const n = Number(scorm.get("cmi.interactions._count") || "0");
+      scorm.set(`cmi.interactions.${n}.id`, payload.quizId);
+      scorm.set(`cmi.interactions.${n}.type`, "choice");
+      scorm.set(
+        `cmi.interactions.${n}.learner_response`,
+        JSON.stringify(payload.responses).slice(0, 250)
+      );
+      scorm.set(`cmi.interactions.${n}.result`, passed ? "correct" : "wrong");
     }
-
-    if (pairs.length > 0) {
-      recordInteraction({
-        scorm,
-        interactionId: payload.quizId,
-        type: "matching",
-        result: passed ? "correct" : "incorrect",
-        learnerResponse: pairs.join("[,]"),
-        description: humanize(payload.quizId) + " (matching)"
-      });
-    }
-  } else if (isCloze) {
-    // fill-in: can be plain string; do per blank
-    for (const [blankId, v] of Object.entries(payload.responses ?? {})) {
-      const resp = Array.isArray(v) ? (v[0] ?? "") : String(v ?? "");
-      recordInteraction({
-        scorm,
-        interactionId: `${payload.quizId}:${blankId}`,
-        type: "fill-in",
-        result: passed ? "correct" : "incorrect",
-        learnerResponse: resp,
-        description: humanize(`${payload.quizId}:${blankId}`) + " (fill-in)"
-      });
-    }
-  } else {
-    // choice (MCQ):
-    // single: "a"
-    // multi: "a[,]b"
-    for (const [qId, v] of Object.entries(payload.responses ?? {})) {
-      const resp = Array.isArray(v) ? v.filter(Boolean).join("[,]") : String(v ?? "");
-      recordInteraction({
-        scorm,
-        interactionId: `${payload.quizId}:${qId}`,
-        type: "choice",
-        result: passed ? "correct" : "incorrect",
-        learnerResponse: resp,
-        description: humanize(`${payload.quizId}:${qId}`) + " (choice)"
-      });
-    }
+  } catch {
+    // ignore interaction write errors (LMS variance)
   }
-} catch {
-  // ignore
-}
 
-  // Recompute using "all required items" rule.
+  // After quiz submit, recompute completion
   recomputeChapterCompletion();
 }
 
-function markThisChapterComplete() {
-  const info = getCurrentChapter();
-  if (!info) return;
-
-  markChapterComplete(state, info.lessonId, info.chapterId);
-  reconcileCourseState({ course, state, scorm, touchedLessonId: info.lessonId });
-  saveProgress(scorm, state);
-  scorm.commit();
-}
-function computeRequiredViewedIds(ch: any): string[] {
-  const out: string[] = [];
-
-  for (const b of ch.page.blocks) {
-    if (b.requiredView === false) continue;
-
-    // Accordion: require each item opened at least once
-    if (b.type === "accordion") {
-      const requireAll = b.requireAllExpanded !== false;
-      if (requireAll) {
-        (b.items ?? []).forEach((it: any, i: number) => {
-          out.push(it.id || `${b.id}::item::${i + 1}`);
-        });
-        continue;
-      }
-      // If not requiring all, treat accordion itself as one requirement
-      out.push(b.id);
-      continue;
-    }
-
-    // Flipcard: require flipping (we will emit its block id on first flip)
-    if (b.type === "flipcard") {
-      const requireFlip = b.requireFlip !== false;
-      if (requireFlip) out.push(b.id);
-      continue; // flipcards are interaction-tracked, not visibility-tracked
-    }
-
-    // Default: block id is required
-    out.push(b.id);
-  }
-
-  return out;
-}
-
-function tryCompleteViewedChapter(params: { lessonId: string; chapterId: string }) {
-  if (!course) return;
-
-  const { lessonId, chapterId } = params;
-  const ch = course.lessons
-    .find((l) => l.id === lessonId)
-    ?.chapters.find((c) => c.id === chapterId);
-
-  if (!ch) return;
-
-  const mode = ch.completion?.mode;
-  if (mode !== "viewed" && mode !== "viewed+quiz") return;
-
-  const state = loadProgress(scorm, course);
-  const chKey = `${lessonId}/${chapterId}`;
-
-  const requiredIds = computeRequiredViewedIds(ch);
-  const viewedIds = state.viewed[chKey] ?? [];
-  const allViewed = requiredIds.every((id) => viewedIds.includes(id));
-
-  if (allViewed) {
-    markChapterComplete(state, lessonId, chapterId);
-    reconcileCourseState({ course: course, state, scorm, touchedLessonId: lessonId });
-  }
-
-  saveProgress(scorm, state);
-  scorm.commit();
-}
-
-function onViewedIds(ids: string[]) {
-  if (!course) return;
-
-  const lessonId = route.meta.lessonId as string | undefined;
-  const chapterId = route.meta.chapterId as string | undefined;
-  if (!lessonId || !chapterId) return;
-
-  const ch = course.lessons.find((l) => l.id === lessonId)?.chapters.find((c) => c.id === chapterId);
-  if (!ch) return;
-
-  const mode = ch.completion?.mode;
-  if (mode !== "viewed" && mode !== "viewed+quiz") return;
-
-  const state = loadProgress(scorm, course);
-  const chKey = `${lessonId}/${chapterId}`;
-
-  let changed = false;
-  for (const id of ids) {
-    const before = (state.viewed[chKey] ?? []).length;
-    markBlockViewed(state, chKey, id);
-    const after = (state.viewed[chKey] ?? []).length;
-    if (after !== before) changed = true;
-  }
-
-  if (!changed) return;
-
-  saveProgress(scorm, state);
-  scorm.commit();
-
-  tryCompleteViewedChapter({ lessonId, chapterId });
-}
-// --- viewed tracking (for completion.mode="viewed" or "viewed+quiz") ---
-let observer: IntersectionObserver | null = null;
-
-function setupViewedObserver() {
-  if (!("IntersectionObserver" in window)) return;
-
-  observer?.disconnect();
-
-  observer = new IntersectionObserver(
-    (entries) => {
-      const info = getCurrentChapter();
-      if (!info) return;
-
-      const { lessonId, chapterId, ch } = info;
-
-      const mode = ch.completion?.mode;
-      if (mode !== "viewed" && mode !== "viewed+quiz") return;
-
-      const chKey = `${lessonId}/${chapterId}`;
-      let changed = false;
-
-      for (const e of entries) {
-        if (!e.isIntersecting) continue;
-        const el = e.target as HTMLElement;
-        const blockId = el.dataset.blockId || "";
-        if (!blockId) continue;
-
-        const blk = ch.page.blocks.find((b) => b.id === blockId);
-        if (!blk || blk.requiredView === false) continue;
-
-        const before = (state.viewed[chKey] ?? []).length;
-        markBlockViewed(state, chKey, blockId);
-        const after = (state.viewed[chKey] ?? []).length;
-        if (after !== before) changed = true;
-      }
-
-      if (!changed) return;
-
-      // Recompute using "all required items" rule.
-      recomputeChapterCompletion();
-    },
-    { threshold: 0.6 }
-  );
-
-  setTimeout(() => {
-    document.querySelectorAll<HTMLElement>(".scorm-block[data-block-id]").forEach((el) => observer?.observe(el));
-  }, 0);
-}
-
-onMounted(() => setupViewedObserver());
-
 watch(
   () => route.fullPath,
-  () => setupViewedObserver()
+  () => {
+    // allow DOM to update then re-bind observer
+    window.setTimeout(setupViewedObserver, 0);
+  }
 );
 
+onMounted(() => {
+  setupViewedObserver();
+});
+
 onBeforeUnmount(() => {
-  observer?.disconnect();
+  if (observer) observer.disconnect();
   observer = null;
 });
 </script>
+
+<style scoped>
+.pageRoot {
+  display: block;
+}
+.pageBlocks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.manualCompleteWrap {
+  margin-top: 16px;
+}
+</style>
