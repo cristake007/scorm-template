@@ -16,7 +16,6 @@
 
         <v-spacer />
         <v-img v-if="logoUrl" :src="logoUrl" max-height="40" max-width="140" contain class="mr-2" />
-        <v-btn class="ml-2" variant="text" prepend-icon="mdi-help-circle-outline" @click="openTour">How to navigate</v-btn>
       </v-app-bar>
       <div class="appBarScrollTrack" aria-hidden="true">
         <div class="appBarScrollValue" :style="{ transform: `scaleX(${scrollProgress})` }" />
@@ -117,24 +116,6 @@
       </v-main>
     </v-layout>
 
-    <v-dialog v-model="tourDialog" max-width="760" persistent>
-      <v-card class="tourDialog">
-        <v-card-title>{{ activeTourStep?.title || "Course tour" }}</v-card-title>
-        <v-card-text>
-          <p class="tourDialog__text">{{ activeTourStep?.description }}</p>
-          <div class="tourDialog__progress">Step {{ tourStepIndex + 1 }} of {{ tourSteps.length }}</div>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn variant="text" @click="showTourOnNextLaunch">Show on next launch</v-btn>
-          <v-spacer />
-          <v-btn variant="text" @click="closeTour">Skip</v-btn>
-          <v-btn variant="text" :disabled="tourStepIndex === 0" @click="goToTourStep(tourStepIndex - 1)">Back</v-btn>
-          <v-btn color="primary" @click="nextTourStep">{{ tourStepIndex === tourSteps.length - 1 ? "Done" : "Next" }}</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <div v-if="tourDialog && spotlightStyle" class="tourSpotlight" :style="spotlightStyle" aria-hidden="true" />
   </v-app>
 </template>
 
@@ -154,13 +135,6 @@ defineProps<{
   logoUrl?: string;
 }>();
 
-type TourStep = {
-  title: string;
-  description: string;
-  selector: string;
-  forceScrollBottom?: boolean;
-};
-
 const runtime = inject(RuntimeStoreKey);
 if (!runtime) throw new Error("RuntimeStore not provided");
 
@@ -178,7 +152,6 @@ watch(
   () => {
     window.setTimeout(() => {
       updateBottomState();
-      updateSpotlight();
     }, 0);
   }
 );
@@ -202,43 +175,13 @@ const openLessons = ref(new Set<string>());
 const resizing = ref(false);
 const resizerEl = ref<HTMLElement | null>(null);
 const mainContentEl = ref<any>(null);
-const navDrawerEl = ref<any>(null);
-const pagerEl = ref<any>(null);
 const atBottom = ref(false);
 const scrollProgress = ref(0);
-
-const tourDialog = ref(false);
-const tourStepIndex = ref(0);
-const spotlightStyle = ref<Record<string, string> | null>(null);
-
-const tourSteps: TourStep[] = [
-  {
-    title: "Open lessons from the drawer",
-    description: "Start here. Expand a lesson to reveal chapters, then open any chapter from the left navigation.",
-    selector: ".v-navigation-drawer .navRow--root"
-  },
-  {
-    title: "Jump directly to chapters",
-    description: "Chapter rows show completion status and let you jump around quickly without losing progress.",
-    selector: ".v-navigation-drawer .navRow--child"
-  },
-  {
-    title: "Use quick previous/next controls",
-    description: "When you reach the bottom of a chapter, floating back/next buttons appear for fast navigation.",
-    selector: ".chapterPager",
-    forceScrollBottom: true
-  },
-  {
-    title: "Finish at the end",
-    description: "The Finish course button appears on the final chapter and only unlocks once all required lessons are complete.",
-    selector: ".finishCourseWrap"
-  }
-];
-
-const activeTourStep = computed(() => tourSteps[tourStepIndex.value] ?? null);
+const openLessonStorageKey = `nav-open-lessons:${runtime.course.course.id}:v${runtime.course.course.version}`;
 
 let onMove: ((e: PointerEvent) => void) | null = null;
 let onUp: ((e: PointerEvent) => void) | null = null;
+let scrollRaf = 0;
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 const isLessonOpen = (id: string) => openLessons.value.has(id);
@@ -247,6 +190,7 @@ function toggleLesson(id: string) {
   const next = new Set(openLessons.value);
   next.has(id) ? next.delete(id) : next.add(id);
   openLessons.value = next;
+  persistOpenLessons();
 }
 
 function startResize(e: PointerEvent) {
@@ -286,25 +230,6 @@ function startResize(e: PointerEvent) {
   e.preventDefault();
 }
 
-const tourStorageKey = `tour-seen:${runtime.course.course.id}:v${runtime.course.course.version}`;
-
-function showTourOnNextLaunch() {
-  try {
-    window.localStorage.removeItem(tourStorageKey);
-  } catch {
-    // ignore
-  }
-  closeTour();
-}
-
-function dismissTour() {
-  try {
-    window.localStorage.setItem(tourStorageKey, "1");
-  } catch {
-    // ignore
-  }
-}
-
 function getMainScroller(): HTMLElement | null {
   const raw = mainContentEl.value;
   if (!raw) return null;
@@ -313,6 +238,7 @@ function getMainScroller(): HTMLElement | null {
 }
 
 function updateBottomState() {
+  scrollRaf = 0;
   const el = getMainScroller();
   if (!el) {
     atBottom.value = false;
@@ -325,112 +251,69 @@ function updateBottomState() {
   scrollProgress.value = maxScroll > 0 ? currentScroll / maxScroll : 0;
 }
 
-function resolveSpotlightElement(step: TourStep): HTMLElement | null {
-  return document.querySelector<HTMLElement>(step.selector);
+function queueBottomStateUpdate() {
+  if (scrollRaf) return;
+  scrollRaf = window.requestAnimationFrame(updateBottomState);
 }
 
-function updateSpotlight() {
-  if (!tourDialog.value || !activeTourStep.value) {
-    spotlightStyle.value = null;
-    return;
+function lessonHasCompletedChapter(lessonId: string): boolean {
+  return runtime.state.completedChapters.some((chapterKey) => chapterKey.startsWith(`${lessonId}/`));
+}
+
+function restoreOpenLessons() {
+  const restored = new Set<string>();
+
+  try {
+    const raw = window.localStorage.getItem(openLessonStorageKey);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        for (const id of parsed) {
+          if (typeof id === "string") restored.add(id);
+        }
+      }
+    }
+  } catch {
+    // ignore invalid local storage data
   }
 
-  const targetEl = resolveSpotlightElement(activeTourStep.value);
-  if (!targetEl) {
-    spotlightStyle.value = null;
-    return;
+  for (const lesson of runtime.course.lessons) {
+    const includesCurrentRoute = lesson.chapters.some((chapter) => chapter.route === route.path);
+    if (lessonHasCompletedChapter(lesson.id) || includesCurrentRoute) restored.add(lesson.id);
   }
 
-  const rect = targetEl.getBoundingClientRect();
-  spotlightStyle.value = {
-    top: `${Math.max(8, rect.top - 8)}px`,
-    left: `${Math.max(8, rect.left - 8)}px`,
-    width: `${Math.max(40, rect.width + 16)}px`,
-    height: `${Math.max(40, rect.height + 16)}px`
-  };
+  openLessons.value = restored;
 }
 
-function ensureStepVisible(step: TourStep) {
-  if (!step.forceScrollBottom) return;
-  const scroller = getMainScroller();
-  if (!scroller) return;
-
-  scroller.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" });
-  window.setTimeout(updateBottomState, 120);
-}
-
-function goToTourStep(idx: number) {
-  if (idx < 0 || idx > tourSteps.length - 1) return;
-  tourStepIndex.value = idx;
-  ensureStepVisible(tourSteps[idx]);
-  window.setTimeout(updateSpotlight, 200);
-}
-
-function nextTourStep() {
-  if (tourStepIndex.value >= tourSteps.length - 1) {
-    dismissTour();
-    closeTour();
-    return;
+function persistOpenLessons() {
+  try {
+    window.localStorage.setItem(openLessonStorageKey, JSON.stringify(Array.from(openLessons.value)));
+  } catch {
+    // ignore
   }
-  goToTourStep(tourStepIndex.value + 1);
-}
-
-function openTour() {
-  tourDialog.value = true;
-  goToTourStep(0);
-}
-
-function closeTour() {
-  tourDialog.value = false;
-  spotlightStyle.value = null;
 }
 
 function goToChapter(targetRoute: string) {
   if (!targetRoute) return;
   router.push(targetRoute);
   const el = getMainScroller();
-  if (el) el.scrollTo({ top: 0, behavior: "smooth" });
+  if (el) el.scrollTo({ top: 0 });
 }
 
-watch([tourDialog, tourStepIndex, showChapterPager], () => {
-  window.setTimeout(updateSpotlight, 0);
-});
-
-watch(tourDialog, (open) => {
-  if (open) {
-    window.addEventListener("scroll", updateSpotlight, { passive: true });
-    window.setTimeout(updateSpotlight, 0);
-    return;
-  }
-  window.removeEventListener("scroll", updateSpotlight);
-});
-
 onMounted(() => {
-  const el = getMainScroller();
-  if (el) el.addEventListener("scroll", updateBottomState, { passive: true });
+  restoreOpenLessons();
 
-  window.addEventListener("resize", updateSpotlight, { passive: true });
+  const el = getMainScroller();
+  if (el) el.addEventListener("scroll", queueBottomStateUpdate, { passive: true });
 
   updateBottomState();
-
-  try {
-    const seenTour = window.localStorage.getItem(tourStorageKey) === "1";
-    if (!seenTour) {
-      window.setTimeout(() => {
-        if (!tourDialog.value) openTour();
-      }, 300);
-    }
-  } catch {
-    // ignore
-  }
 });
 
 onBeforeUnmount(() => {
   const el = getMainScroller();
-  if (el) el.removeEventListener("scroll", updateBottomState);
+  if (el) el.removeEventListener("scroll", queueBottomStateUpdate);
 
-  window.removeEventListener("resize", updateSpotlight);
-  window.removeEventListener("scroll", updateSpotlight);
+  if (scrollRaf) cancelAnimationFrame(scrollRaf);
 
   // If component unmounts while resizing, clean up.
   document.documentElement.classList.remove("no-select");
