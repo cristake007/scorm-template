@@ -1,0 +1,492 @@
+{
+  "id": "lesson-2",
+  "title": "Lesson 2 (Explicit chapter locks + grid showcase)",
+  "unlockAfterLessonId": "lesson-1",
+  "chapters": [
+    {
+      "id": "ch-1",
+      "title": "Step 1 (Viewed)",
+      "route": "/lesson-2/step-1",
+      "required": true,
+      "completion": {
+        "mode": "viewed"
+      },
+      "page": {
+        "layout": {
+          "maxWidth": "xl",
+          "gap": "lg"
+        },
+        "blocks": [
+          {
+            "type": "text",
+            "variant": "h1",
+            "text": "Lesson 2 — Step 1"
+          },
+          {
+            "type": "text",
+            "variant": "muted",
+            "text": "This is the first chapter in Lesson 2."
+          },
+          {
+            "type": "scroll.sentinel",
+            "text": "Bottom reached ✅"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ch-2",
+      "title": "Grid Mega Demo (Viewed)",
+      "route": "/lesson-2/grid-mega",
+      "required": true,
+      "completion": {
+        "mode": "viewed"
+      },
+      "page": {
+        "layout": {
+          "maxWidth": "xl",
+          "gap": "lg"
+        },
+        "blocks": [
+          {
+            "type": "text",
+            "variant": "h1",
+            "text": "Grid Mega Demo"
+          },
+          {
+            "type": "text",
+            "text": "Below is a heavy layout showcasing span-based composition and mixed content blocks."
+          },
+          {
+            "type": "section",
+            "id": "s-abbrev",
+            "title": "Abkürzungsverzeichnis",
+            "variant": "card",
+            "padding": "lg",
+            "blocks": [
+              {
+                "type": "text",
+                "id": "t1",
+                "variant": "muted",
+                "text": "Klicken Sie, um mehr zu erfahren!"
+              },
+              {
+                "type": "iconList",
+                "id": "icons1",
+                "items": [
+                  {
+                    "icon": "book",
+                    "label": "ML",
+                    "text": "Maschinelles Lernen (engl. Machine Learning)"
+                  },
+                  {
+                    "icon": "book",
+                    "label": "KNN",
+                    "text": "Künstliche Neuronale Netze"
+                  },
+                  {
+                    "icon": "book",
+                    "label": "Deep Learning",
+                    "text": "Tiefes Lernen, ein Teilbereich von ML"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "layout.grid",
+            "id": "g-intro-mixed",
+            "columns": {
+              "sm": 1,
+              "md": 2,
+              "lg": 6
+            },
+            "gap": "lg",
+            "items": [
+              {
+                "id": "cell-hero",
+                "span": 4,
+                "blocks": [
+                  {
+                    "type": "text",
+                    "variant": "h1",
+                    "text": "Hero area — Overview"
+                  },
+                  {
+                    "type": "text",
+                    "variant": "muted",
+                    "text": "Large hero spanning 4/6 columns (lg)."
+                  },
+                  {
+                    "type": "video.youtube",
+                    "title": "Watch this first",
+                    "mode": "embed",
+                    "videoId": "dQw4w9WgXcQ",
+                    "start": 10,
+                    "privacyMode": true
+                  }
+                ]
+              },
+              {
+                "id": "cell-image-a",
+                "span": 2,
+                "blocks": [
+                  {
+                    "type": "text",
+                    "variant": "h2",
+                    "text": "Diagram A"
+                  },
+                  {
+                    "type": "image",
+                    "src": "./assets/images/diagram-1.png",
+                    "alt": "Process diagram",
+                    "ratio": "16/9",
+                    "rounded": "lg"
+                  },
+                  {
+                    "type": "text",
+                    "text": "Compact card, 2 columns."
+                  }
+                ]
+              },
+              {
+                "id": "cell-image-b",
+                "span": 2,
+                "blocks": [
+                  {
+                    "type": "text",
+                    "variant": "h2",
+                    "text": "Diagram B"
+                  },
+                  {
+                    "type": "image",
+                    "src": "./assets/images/diagram-2.png",
+                    "alt": "Second diagram",
+                    "ratio": "16/9",
+                    "rounded": "lg"
+                  },
+                  {
+                    "type": "text",
+                    "text": "Another compact card."
+                  }
+                ]
+              },
+              {
+                "id": "cell-section",
+                "span": 2,
+                "blocks": [
+                  {
+                    "type": "section",
+                    "id": "sec-abbrev",
+                    "title": "Abbreviations",
+                    "variant": "card",
+                    "padding": "lg",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "variant": "muted",
+                        "text": "Quick reference list:"
+                      },
+                      {
+                        "type": "iconList",
+                        "id": "icons-abbrev",
+                        "items": [
+                          {
+                            "icon": "book",
+                            "label": "SCORM",
+                            "text": "Sharable Content Object Reference Model"
+                          },
+                          {
+                            "icon": "book",
+                            "label": "LMS",
+                            "text": "Learning Management System"
+                          },
+                          {
+                            "icon": "info",
+                            "label": "CMI",
+                            "text": "Computer Managed Instruction (SCORM data model)"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "cell-quiz",
+                "span": 4,
+                "blocks": [
+                  {
+                    "type": "quiz.mcq",
+                    "quizId": "ch-mixed-quiz-1",
+                    "title": "Quick check",
+                    "scoreMax": 100,
+                    "passScore": 80,
+                    "attemptsAllowed": 0,
+                    "shuffleOptions": true,
+                    "questions": [
+                      {
+                        "id": "q1",
+                        "prompt": "Where does our course store progress JSON?",
+                        "options": [
+                          {
+                            "id": "a",
+                            "text": "localStorage"
+                          },
+                          {
+                            "id": "b",
+                            "text": "cmi.suspend_data"
+                          },
+                          {
+                            "id": "c",
+                            "text": "cookies"
+                          }
+                        ],
+                        "correct": [
+                          "b"
+                        ]
+                      },
+                      {
+                        "id": "q2",
+                        "prompt": "SCORM 2004 API object name is…",
+                        "options": [
+                          {
+                            "id": "a",
+                            "text": "API_1484_11"
+                          },
+                          {
+                            "id": "b",
+                            "text": "API_11"
+                          },
+                          {
+                            "id": "c",
+                            "text": "SCORM_API"
+                          }
+                        ],
+                        "correct": [
+                          "a"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "cell-video-link",
+                "span": 2,
+                "blocks": [
+                  {
+                    "type": "text",
+                    "variant": "h2",
+                    "text": "Optional video (opens in new tab)"
+                  },
+                  {
+                    "type": "video.youtube",
+                    "title": "Optional: Deep dive",
+                    "mode": "link",
+                    "videoId": "3RsmRMqX2IY"
+                  }
+                ]
+              },
+              {
+                "id": "cell-end",
+                "span": 2,
+                "blocks": [
+                  {
+                    "type": "text",
+                    "text": "When you’re done, scroll to the bottom."
+                  },
+                  {
+                    "type": "scroll.sentinel",
+                    "text": "Bottom reached ✅"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "l2-ch2-scenario",
+            "type": "scenario.decisionTree",
+            "title": "Decision simulation: reporting a risky event",
+            "prompt": "Choose how you would react as a team lead.",
+            "startNodeId": "start",
+            "nodes": [
+              {
+                "id": "start",
+                "text": "A teammate reports an unapproved process change in production.",
+                "choices": [
+                  {
+                    "id": "a",
+                    "label": "Ignore it for now",
+                    "feedback": "Risk increases. You should acknowledge and triage immediately.",
+                    "nextNodeId": "escalation"
+                  },
+                  {
+                    "id": "b",
+                    "label": "Acknowledge and investigate impact",
+                    "feedback": "Correct first step. Capture impact and communicate next actions.",
+                    "nextNodeId": "escalation"
+                  }
+                ]
+              },
+              {
+                "id": "escalation",
+                "text": "What is your next action?",
+                "choices": [
+                  {
+                    "id": "c",
+                    "label": "Escalate through official change channel",
+                    "feedback": "Great choice. This keeps auditability and ownership clear."
+                  },
+                  {
+                    "id": "d",
+                    "label": "Fix silently and move on",
+                    "feedback": "Not ideal. Silent fixes hurt transparency and compliance."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "l2-ch2-kpi",
+            "type": "kpi.metrics",
+            "title": "Post-rollout training impact",
+            "durationMs": 1400,
+            "items": [
+              {
+                "label": "Completion rate",
+                "value": 94,
+                "suffix": "%"
+              },
+              {
+                "label": "Avg. quiz score",
+                "value": 87,
+                "suffix": "%"
+              },
+              {
+                "label": "Escalation time",
+                "value": 18,
+                "suffix": " min"
+              }
+            ]
+          },
+          {
+            "id": "l2-ch2-before-after",
+            "type": "comparison.beforeAfter",
+            "title": "Policy flow improvements",
+            "beforeTitle": "Before",
+            "afterTitle": "After",
+            "before": [
+              "Updates tracked in chat threads",
+              "No explicit owner for approval",
+              "Incident recap not standardized"
+            ],
+            "after": [
+              "Change requests logged in one system",
+              "Owner assigned per release",
+              "Post-incident recap template required"
+            ]
+          },
+          {
+            "type": "scroll.sentinel",
+            "text": "Bottom reached ✅"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ch-3",
+      "title": "Locked chapter (unlocks after Grid Mega Demo)",
+      "route": "/lesson-2/locked-3",
+      "required": true,
+      "locked": true,
+      "unlockAfterChapterId": "ch-2",
+      "completion": {
+        "mode": "manual"
+      },
+      "page": {
+        "layout": {
+          "maxWidth": "xl",
+          "gap": "lg"
+        },
+        "blocks": [
+          {
+            "type": "text",
+            "variant": "h1",
+            "text": "Locked Chapter (ch-3)"
+          },
+          {
+            "type": "text",
+            "variant": "muted",
+            "text": "This chapter is explicitly locked until Lesson 2 / ch-2 is completed."
+          },
+          {
+            "type": "completion.button",
+            "label": "Mark this chapter complete"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ch-4",
+      "title": "Locked chain (unlocks after ch-3)",
+      "route": "/lesson-2/locked-4",
+      "required": false,
+      "locked": true,
+      "unlockAfterChapterId": "ch-3",
+      "completion": {
+        "mode": "manual"
+      },
+      "page": {
+        "layout": {
+          "maxWidth": "xl",
+          "gap": "lg"
+        },
+        "blocks": [
+          {
+            "type": "text",
+            "variant": "h1",
+            "text": "Locked Chain Chapter (ch-4)"
+          },
+          {
+            "type": "text",
+            "variant": "muted",
+            "text": "Demonstrates chained unlocking."
+          }
+        ]
+      }
+    },
+    {
+      "id": "ch-bonus",
+      "title": "Bonus (free bypass)",
+      "route": "/lesson-2/bonus",
+      "required": false,
+      "free": true,
+      "completion": {
+        "mode": "viewed"
+      },
+      "page": {
+        "layout": {
+          "maxWidth": "xl",
+          "gap": "lg"
+        },
+        "blocks": [
+          {
+            "type": "text",
+            "variant": "h1",
+            "text": "Bonus (free chapter)"
+          },
+          {
+            "type": "text",
+            "variant": "muted",
+            "text": "free=true means it’s accessible once Lesson 2 is unlocked, regardless of locked chapters."
+          },
+          {
+            "type": "scroll.sentinel",
+            "text": "Bottom reached ✅"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,175 @@
+/* AppShell navigation visual styles */
+.navRow .v-btn__overlay,
+.navRow .v-btn__underlay {
+  opacity: 0 !important;
+}
+
+.navRow {
+  width: 100% !important;
+  min-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  justify-content: flex-start !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  color: var(--text-default);
+}
+
+.navRow .v-btn__content {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.navRow__inner {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 14px 16px;
+  gap: 12px;
+}
+
+.navRow__left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.navRow__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  padding-top: 2px;
+}
+
+.navRow__right--compact {
+  gap: 10px;
+}
+
+.navRow__index {
+  width: 18px;
+  text-align: right;
+  color: rgba(0, 0, 0, 0.55);
+  flex: 0 0 auto;
+}
+
+.navRow__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.navRow__title {
+  font-size: 14px;
+  line-height: 1.25;
+  white-space: normal;
+}
+
+.navRow__title--bold {
+  font-weight: 800;
+}
+
+.navRow--active {
+  background: rgba(25, 118, 210, 0.12) !important;
+}
+
+.navRow--active .navRow__title,
+.navRow--active .navRow__index {
+  color: var(--color-primary) !important;
+}
+
+.navRow:not(.v-btn--disabled):hover,
+.navRow:not(.v-btn--disabled):focus-visible {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+.navRow--root .navRow__inner {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.navRow--root .navRow__title {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.78);
+}
+
+.navRow--child .navRow__inner {
+  padding-left: 22px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.navRow--child .navRow__title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tourDialog__list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  color: var(--text-default);
+}
+
+.tourDialog :focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.skipLink {
+  position: absolute;
+  left: -9999px;
+  top: var(--space-2);
+  z-index: 10000;
+  background: #fff;
+  color: #000;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: var(--space-2) var(--space-3);
+}
+
+.skipLink:focus {
+  left: var(--space-3);
+}
+
+.chapterPager {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 9000;
+}
+
+.chapterPager__btn {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.tourDialog__text {
+  margin: 0;
+}
+
+.tourDialog__progress {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.tourSpotlight {
+  position: fixed;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6), 0 0 0 4px rgba(25, 118, 210, 0.75);
+  z-index: 2400;
+  pointer-events: none;
+  transition: all 180ms ease;
+}
