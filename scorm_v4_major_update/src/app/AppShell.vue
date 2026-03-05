@@ -290,7 +290,6 @@ function showTourOnNextLaunch() {
     // ignore
   }
   closeTour();
-<<<<<<< codex/audit-scorm-persistence-in-vue-course-25wg87
 }
 
 function dismissTour() {
@@ -326,18 +325,8 @@ function updateSpotlight() {
   if (!tourDialog.value || !activeTourStep.value) {
     spotlightStyle.value = null;
     return;
-=======
-}
-
-function dismissTour() {
-  try {
-    window.localStorage.setItem(tourStorageKey, "1");
-  } catch {
-    // ignore
->>>>>>> main
   }
 
-<<<<<<< codex/audit-scorm-persistence-in-vue-course-25wg87
   const targetEl = resolveSpotlightElement(activeTourStep.value);
   if (!targetEl) {
     spotlightStyle.value = null;
@@ -432,7 +421,19 @@ onBeforeUnmount(() => {
   const el = getMainScroller();
   if (el) el.removeEventListener("scroll", updateBottomState);
 
-=======
+  window.removeEventListener("resize", updateSpotlight);
+  window.removeEventListener("scroll", updateSpotlight);
+
+}
+
+function dismissTour() {
+  try {
+    window.localStorage.setItem(tourStorageKey, "1");
+  } catch {
+    // ignore
+  }
+}
+
 function getMainScroller(): HTMLElement | null {
   const raw = mainContentEl.value;
   if (!raw) return null;
@@ -522,12 +523,22 @@ watch([tourDialog, tourStepIndex, showChapterPager], () => {
   window.setTimeout(updateSpotlight, 0);
 });
 
+
+watch(tourDialog, (open) => {
+  if (open) {
+    window.addEventListener("scroll", updateSpotlight, { passive: true });
+    window.setTimeout(updateSpotlight, 0);
+    return;
+  }
+
+  window.removeEventListener("scroll", updateSpotlight);
+});
+
 onMounted(() => {
   const el = getMainScroller();
   if (el) el.addEventListener("scroll", updateBottomState, { passive: true });
 
   window.addEventListener("resize", updateSpotlight, { passive: true });
-  window.addEventListener("scroll", updateSpotlight, { passive: true });
 
   updateBottomState();
 
@@ -544,10 +555,10 @@ onBeforeUnmount(() => {
   const el = getMainScroller();
   if (el) el.removeEventListener("scroll", updateBottomState);
 
->>>>>>> main
   window.removeEventListener("resize", updateSpotlight);
   window.removeEventListener("scroll", updateSpotlight);
 
+main
   document.documentElement.classList.remove("no-select");
   if (onMove) window.removeEventListener("pointermove", onMove);
   if (onUp) window.removeEventListener("pointerup", onUp);

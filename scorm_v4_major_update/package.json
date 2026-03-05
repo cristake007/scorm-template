@@ -5,12 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run validate:content && vite build",
+    "build": "npm run check:conflicts && npm run validate:content && vite build",
     "zip": "npm run build && node ./zip.mjs",
     "validate:content": "node ./scripts/validate-content.mjs",
     "lesson:new": "node ./scripts/scaffold-lesson.mjs",
     "chapter:new": "node ./scripts/scaffold-chapter.mjs",
-    "block:add": "node ./scripts/scaffold-block.mjs"
+    "block:add": "node ./scripts/scaffold-block.mjs",
+    "check:conflicts": "node ./scripts/check-conflicts.mjs"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
