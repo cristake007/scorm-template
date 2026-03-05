@@ -59,7 +59,6 @@
                 <span class="navRow__title">{{ lesson.title }}</span>
               </div>
               <div class="navRow__right navRow__right--compact">
-                <v-progress-circular :model-value="lesson.progressPercent" size="18" width="2" color="primary" />
                 <v-icon :icon="isLessonOpen(lesson.lessonId) ? 'mdi-chevron-up' : 'mdi-chevron-down'" :color="isLessonOpen(lesson.lessonId) ? 'primary' : 'grey'" />
               </div>
             </div>
@@ -90,9 +89,6 @@
                     </div>
                   </div>
 
-                  <div class="navRow__right">
-                    <v-icon icon="mdi-check-circle-outline" :color="chapter.completed ? 'primary' : 'grey-lighten-1'" />
-                  </div>
                 </div>
               </v-btn>
 
