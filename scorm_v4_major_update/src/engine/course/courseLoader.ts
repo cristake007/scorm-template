@@ -76,6 +76,21 @@ export type DragWordsQuizBlock = BlockBase & {
   correct: Record<string, string>;
 };
 
+
+export type GptAgentChatBlock = BlockBase & {
+  type: "agent.gptChat" | "gpt.agent";
+  title?: string;
+  typingSpeedMs?: number;
+  turns: Array<{ agent: string; userReply?: string; userReplyLabel?: string }>;
+};
+
+export type TimelineEventsBlock = BlockBase & {
+  type: "timeline.events" | "timeline";
+  title?: string;
+  orientation?: "vertical" | "horizontal";
+  items: Array<{ id?: string; title: string; date?: string; description: string }>;
+};
+
 // ---- YouTube video block (online) ----
 export type YouTubeBlock = BlockBase & {
   type: "video.youtube";
@@ -197,7 +212,9 @@ export type Block =
   | DragWordsQuizBlock
   | SectionBlock
   | IconListBlock
-  | GridBlock;
+  | GridBlock
+  | GptAgentChatBlock
+  | TimelineEventsBlock;
 
 export type PageModel = {
   layout?: LayoutTokens;
@@ -245,7 +262,9 @@ const BLOCK_TYPE_ALIASES: Record<string, string> = {
   "quiz.multipleChoice": "quiz.mcq",
   "quiz.cloze": "quiz.clozeSelect",
   "quiz.matching": "quiz.match",
-  "quiz.drag-and-drop": "quiz.dragWords"
+  "quiz.drag-and-drop": "quiz.dragWords",
+  "gpt.agent": "agent.gptChat",
+  "timeline": "timeline.events"
 };
 
 function canonicalBlockType(type: string): string {

@@ -14,7 +14,9 @@ const TYPE_ALIASES = {
   "quiz.multipleChoice": "quiz.mcq",
   "quiz.cloze": "quiz.clozeSelect",
   "quiz.matching": "quiz.match",
-  "quiz.drag-and-drop": "quiz.dragWords"
+  "quiz.drag-and-drop": "quiz.dragWords",
+  "gpt.agent": "agent.gptChat",
+  "timeline": "timeline.events"
 };
 
 const blockType = TYPE_ALIASES[blockTypeArg] ?? blockTypeArg;
@@ -92,7 +94,40 @@ const templates = {
       { id: "w2", text: "database" }
     ],
     correct: { b1: "w1" }
-  })
+  }),
+
+  "agent.gptChat": (id) => ({
+    id,
+    type: "agent.gptChat",
+    title: "GPT Agent Simulation",
+    typingSpeedMs: 20,
+    turns: [
+      {
+        agent: "Hello! I can help you with this scenario. What would you do first?",
+        userReply: "I would first identify stakeholder requirements.",
+        userReplyLabel: "Simulate learner reply"
+      },
+      {
+        agent: "Great approach. Next, prioritize tasks and define ownership.",
+        userReply: "Then I would communicate the plan to the team.",
+        userReplyLabel: "Simulate follow-up reply"
+      },
+      {
+        agent: "Perfect. That sequence increases alignment and execution speed."
+      }
+    ]
+  }),
+  "timeline.events": (id) => ({
+    id,
+    type: "timeline.events",
+    title: "Project Timeline",
+    orientation: "vertical",
+    items: [
+      { id: `${id}-1`, date: "Week 1", title: "Kickoff", description: "Define scope and goals." },
+      { id: `${id}-2`, date: "Week 2", title: "Execution", description: "Implement agreed tasks." },
+      { id: `${id}-3`, date: "Week 3", title: "Review", description: "Collect feedback and finalize." }
+    ]
+  }),
 };
 
 if (!templates[blockType]) {

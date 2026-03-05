@@ -28,6 +28,8 @@ npm run block:add -- lesson-4 ch-2 quiz.multipleChoice
 npm run block:add -- lesson-4 ch-2 quiz.cloze
 npm run block:add -- lesson-4 ch-2 quiz.matching
 npm run block:add -- lesson-4 ch-2 quiz.drag-and-drop
+npm run block:add -- lesson-4 ch-2 gpt.agent
+npm run block:add -- lesson-4 ch-2 timeline
 ```
 
 Supported block templates:
@@ -38,6 +40,8 @@ Supported block templates:
 - `quiz.clozeSelect` / `quiz.cloze`
 - `quiz.match` / `quiz.matching`
 - `quiz.dragWords` / `quiz.drag-and-drop`
+- `agent.gptChat` / `gpt.agent`
+- `timeline.events` / `timeline`
 
 ## 5) Configure completion
 Set per chapter completion mode:

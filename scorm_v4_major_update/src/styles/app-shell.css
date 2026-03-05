@@ -140,3 +140,16 @@
 .skipLink:focus {
   left: var(--space-3);
 }
+
+.chapterPager {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 9000;
+}
+
+.chapterPager__btn {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}

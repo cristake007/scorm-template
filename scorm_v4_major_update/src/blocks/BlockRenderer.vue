@@ -26,6 +26,8 @@ import QuizDragWordsBlock from "./QuizDragWordsBlock.vue";
 import SectionBlock from "./SectionBlock.vue";
 import IconListBlock from "./IconListBlock.vue";
 import GridBlock from "./GridBlock.vue";
+import GptAgentChatBlock from "./GptAgentChatBlock.vue";
+import TimelineEventsBlock from "./TimelineEventsBlock.vue";
 
 const props = defineProps<{ block: any }>();
 
@@ -84,6 +86,12 @@ const Comp = computed(() => {
 
     case "layout.grid":
       return GridBlock;
+    case "agent.gptChat":
+    case "gpt.agent":
+      return GptAgentChatBlock;
+    case "timeline.events":
+    case "timeline":
+      return TimelineEventsBlock;
 
     default:
       return "div";

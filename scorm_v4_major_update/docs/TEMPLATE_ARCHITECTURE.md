@@ -63,3 +63,7 @@ To improve author ergonomics, quiz block aliases are supported and normalized:
 - `quiz.drag-and-drop` -> `quiz.dragWords`
 
 This works both in content files and in CLI block scaffolding.
+
+Additional block aliases:
+- `gpt.agent` -> `agent.gptChat`
+- `timeline` -> `timeline.events`

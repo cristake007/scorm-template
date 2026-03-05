@@ -135,7 +135,11 @@
         />
       </v-navigation-drawer>
 
-      <v-main id="mainContent" tabindex="-1">
+      <v-main id="mainContent" ref="mainContentEl" tabindex="-1">
+        <div v-if="showChapterPager" class="chapterPager" aria-label="Chapter navigation">
+          <v-btn v-if="prevRoute" icon="mdi-chevron-left" color="primary" class="chapterPager__btn" @click="goToChapter(prevRoute)" />
+          <v-btn v-if="nextRoute" icon="mdi-chevron-right" color="primary" class="chapterPager__btn" @click="goToChapter(nextRoute)" />
+        </div>
         <router-view />
       </v-main>
     </v-layout>
@@ -145,7 +149,7 @@
 <script setup lang="ts">
 import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useDisplay } from "vuetify";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 import type { NavLesson } from "../engine/navigation/navModel";
 import { RuntimeStoreKey } from "../core/runtime/runtimeStore";
@@ -163,13 +167,34 @@ if (!runtime) throw new Error("RuntimeStore not provided");
 
 const { mdAndUp } = useDisplay();
 const route = useRoute();
+const router = useRouter();
 const drawerOpen = ref(mdAndUp.value);
 
 watch(mdAndUp, (isDesktop) => {
   drawerOpen.value = isDesktop;
 });
 
+watch(
+  () => route.fullPath,
+  () => {
+    window.setTimeout(updateBottomState, 0);
+  }
+);
+
 const overviewRoute = computed(() => runtime.course.system?.fallbackRoute || runtime.course.system?.routes?.[0]?.route || "/");
+const chapterRouteOrder = computed(() =>
+  runtime.course.lessons.flatMap((lesson) => lesson.chapters.map((chapter) => chapter.route))
+);
+
+const currentChapterIndex = computed(() => chapterRouteOrder.value.findIndex((r) => r === route.path));
+const prevRoute = computed(() => (currentChapterIndex.value > 0 ? chapterRouteOrder.value[currentChapterIndex.value - 1] : ""));
+const nextRoute = computed(() =>
+  currentChapterIndex.value >= 0 && currentChapterIndex.value < chapterRouteOrder.value.length - 1
+    ? chapterRouteOrder.value[currentChapterIndex.value + 1]
+    : ""
+);
+const showChapterPager = computed(() => atBottom.value && (!!prevRoute.value || !!nextRoute.value));
+
 
 const MIN_W = 280;
 const MAX_W = () => Math.min(520, window.innerWidth - 80);
@@ -180,6 +205,8 @@ const resizerEl = ref<HTMLElement | null>(null);
 const finishDialog = ref(false);
 const isFinishing = ref(false);
 const tourDialog = ref(false);
+const mainContentEl = ref<any>(null);
+const atBottom = ref(false);
 
 let onMove: ((e: PointerEvent) => void) | null = null;
 let onUp: ((e: PointerEvent) => void) | null = null;
@@ -241,6 +268,30 @@ function dismissTour() {
   }
 }
 
+function getMainScroller(): HTMLElement | null {
+  const raw = mainContentEl.value;
+  if (!raw) return null;
+  if (raw instanceof HTMLElement) return raw;
+  return (raw.$el as HTMLElement) ?? null;
+}
+
+function updateBottomState() {
+  const el = getMainScroller();
+  if (!el) {
+    atBottom.value = false;
+    return;
+  }
+
+  atBottom.value = el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
+}
+
+function goToChapter(targetRoute: string) {
+  if (!targetRoute) return;
+  router.push(targetRoute);
+  const el = getMainScroller();
+  if (el) el.scrollTo({ top: 0, behavior: "smooth" });
+}
+
 function finishAndExit() {
   isFinishing.value = true;
   try {
@@ -251,6 +302,10 @@ function finishAndExit() {
 }
 
 onMounted(() => {
+  const el = getMainScroller();
+  if (el) el.addEventListener("scroll", updateBottomState, { passive: true });
+  updateBottomState();
+
   try {
     if (!window.localStorage.getItem(tourStorageKey)) {
       tourDialog.value = true;
@@ -261,6 +316,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  const el = getMainScroller();
+  if (el) el.removeEventListener("scroll", updateBottomState);
+
   document.documentElement.classList.remove("no-select");
   if (onMove) window.removeEventListener("pointermove", onMove);
   if (onUp) window.removeEventListener("pointerup", onUp);
