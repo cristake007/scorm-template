@@ -1,6 +1,7 @@
 // src/engine/progress/progressStore.ts
 import type { ScormClient } from "../../scorm/scormClient";
 import type { CourseModel } from "../course/courseLoader";
+import { writeCourseObjective } from "../../scorm/scormReporting";
 
 export type ScoreEntry = {
   attempts: number;
@@ -58,6 +59,28 @@ function safeStringify(v: unknown): string {
   }
 }
 
+function compactForSuspendData(state: ProgressStateV1, includeResponses: boolean): ProgressStateV1 {
+  const compactScores = Object.fromEntries(
+    Object.entries(state.scores ?? {}).map(([quizId, score]) => [
+      quizId,
+      {
+        attempts: score.attempts,
+        bestRaw: score.bestRaw,
+        lastRaw: score.lastRaw,
+        max: score.max,
+        passed: score.passed,
+        lastAttemptAt: score.lastAttemptAt,
+        ...(includeResponses ? { lastResponses: score.lastResponses ?? {} } : {})
+      }
+    ])
+  );
+
+  return {
+    ...state,
+    scores: compactScores
+  };
+}
+
 export function chapterKey(lessonId: string, chapterId: string): string {
   return `${lessonId}/${chapterId}`;
 }
@@ -102,12 +125,23 @@ export function loadProgress(scorm: ScormClient, course: CourseModel): ProgressS
 
 export function saveProgress(scorm: ScormClient, state: ProgressStateV1): boolean {
   state.timestamps.lastSavedAt = nowIso();
-  const ok = scorm.set("cmi.suspend_data", safeStringify(state));
-  if (!ok) {
+
+  const fullPayload = safeStringify(compactForSuspendData(state, true));
+  const fullWriteOk = scorm.set("cmi.suspend_data", fullPayload);
+  if (fullWriteOk) return true;
+
+  const fallbackPayload = safeStringify(compactForSuspendData(state, false));
+  const fallbackWriteOk = scorm.set("cmi.suspend_data", fallbackPayload);
+  if (fallbackWriteOk) {
     // eslint-disable-next-line no-console
-    console.warn("SCORM: failed to set cmi.suspend_data", scorm.getLastError?.());
+    console.warn(`SCORM: suspend_data exceeded LMS limits, saved compact state without quiz responses (size=${fallbackPayload.length}).`);
+    return true;
   }
-  return ok;
+
+  const err = scorm.getLastError?.();
+  // eslint-disable-next-line no-console
+  console.warn(`SCORM: failed to set cmi.suspend_data (size=${fullPayload.length}).`, err);
+  return false;
 }
 
 export function markChapterComplete(state: ProgressStateV1, lessonId: string, chapterId: string) {
@@ -166,4 +200,40 @@ export function recordQuizAttempt(params: {
   existing.passed = existing.passed || passed;
   existing.lastAttemptAt = nowIso();
   if (responses) existing.lastResponses = responses;
+}
+
+export function reconcileCourseState(params: {
+  course: CourseModel;
+  state: ProgressStateV1;
+  scorm: ScormClient;
+  touchedLessonId?: string;
+}) {
+  const { course, state, scorm, touchedLessonId } = params;
+
+  // Lesson is complete if all of its chapters are complete.
+  const lessonIds = touchedLessonId ? [touchedLessonId] : course.lessons.map((l) => l.id);
+  for (const lessonId of lessonIds) {
+    const lesson = course.lessons.find((l) => l.id === lessonId);
+    if (!lesson || !lesson.chapters.length) continue;
+
+    const done = lesson.chapters.every((ch) => state.completedChapters.includes(chapterKey(lessonId, ch.id)));
+    if (done) markLessonComplete(state, lessonId);
+  }
+
+  const totalLessons = Math.max(1, course.lessons.length);
+  const completedLessons = state.completedLessons.length;
+  const progressMeasure01 = Math.max(0, Math.min(1, completedLessons / totalLessons));
+
+  const completionStatus = completedLessons >= totalLessons ? "completed" : "incomplete";
+
+  scorm.setCompletion({ completionStatus });
+  scorm.set("cmi.progress_measure", progressMeasure01.toFixed(4));
+
+  writeCourseObjective({
+    scorm,
+    objectiveId: course.course.id,
+    completionStatus,
+    successStatus: "unknown",
+    progressMeasure01
+  });
 }

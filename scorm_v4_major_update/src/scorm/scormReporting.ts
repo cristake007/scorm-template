@@ -1,34 +1,41 @@
-// src/scorm/scormReporting.ts
 import type { ScormClient } from "./scormClient";
 
 type InteractionType = "choice" | "matching" | "fill-in" | "other";
 
-function to01(s: string): boolean {
-  return s === "true" || s === "1";
+function cleanText(value: unknown, max = 250): string {
+  return String(value ?? "")
+    .replace(/[\r\n\t]/g, " ")
+    .replace(/[<>]/g, "")
+    .trim()
+    .slice(0, max);
 }
 
 export function writeInteraction(params: {
   scorm: ScormClient;
-  interactionId: string;              // stable id (use quizId)
+  interactionId: string;
   type: InteractionType;
-  learnerResponse: string;            // SCORM expects string
-  correctResponse?: string;           // optional
+  learnerResponse: string;
+  correctResponse?: string;
+  description?: string;
   result: "correct" | "wrong" | "neutral";
 }) {
-  const { scorm, interactionId, type, learnerResponse, correctResponse, result } = params;
+  const { scorm, interactionId, type, learnerResponse, correctResponse, description, result } = params;
   if (!scorm.initialized) return;
 
-  // Pick next index using _count
   const countStr = scorm.get("cmi.interactions._count") || "0";
   const n = Math.max(0, Number.parseInt(countStr, 10) || 0);
 
-  scorm.set(`cmi.interactions.${n}.id`, interactionId);
-  scorm.set(`cmi.interactions.${n}.type`, type);
-  scorm.set(`cmi.interactions.${n}.learner_response`, learnerResponse);
-  scorm.set(`cmi.interactions.${n}.result`, result);
+  scorm.set(`cmi.interactions.${n}.id`, cleanText(interactionId, 120));
+  scorm.set(`cmi.interactions.${n}.type`, cleanText(type, 30));
+  scorm.set(`cmi.interactions.${n}.learner_response`, cleanText(learnerResponse, 250));
+  scorm.set(`cmi.interactions.${n}.result`, cleanText(result, 30));
 
   if (correctResponse) {
-    scorm.set(`cmi.interactions.${n}.correct_responses.0.pattern`, correctResponse);
+    scorm.set(`cmi.interactions.${n}.correct_responses.0.pattern`, cleanText(correctResponse, 250));
+  }
+
+  if (description) {
+    scorm.set(`cmi.interactions.${n}.description`, cleanText(description, 250));
   }
 
   scorm.commit();
@@ -36,18 +43,17 @@ export function writeInteraction(params: {
 
 export function writeCourseObjective(params: {
   scorm: ScormClient;
-  objectiveId: string;                // e.g. course.course.id
+  objectiveId: string;
   completionStatus: "completed" | "incomplete" | "unknown";
   successStatus: "passed" | "failed" | "unknown";
-  progressMeasure01?: number;         // 0..1
-  scoreScaled01?: number;             // 0..1
+  progressMeasure01?: number;
+  scoreScaled01?: number;
 }) {
   const { scorm, objectiveId, completionStatus, successStatus, progressMeasure01, scoreScaled01 } = params;
   if (!scorm.initialized) return;
 
-  // We'll always use objectives.0 (single objective for the whole course)
   const i = 0;
-  scorm.set(`cmi.objectives.${i}.id`, objectiveId);
+  scorm.set(`cmi.objectives.${i}.id`, cleanText(objectiveId, 120));
   scorm.set(`cmi.objectives.${i}.completion_status`, completionStatus);
   scorm.set(`cmi.objectives.${i}.success_status`, successStatus);
 
