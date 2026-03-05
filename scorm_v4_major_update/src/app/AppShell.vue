@@ -290,6 +290,7 @@ function showTourOnNextLaunch() {
     // ignore
   }
   closeTour();
+<<<<<<< codex/audit-scorm-persistence-in-vue-course-25wg87
 }
 
 function dismissTour() {
@@ -325,8 +326,18 @@ function updateSpotlight() {
   if (!tourDialog.value || !activeTourStep.value) {
     spotlightStyle.value = null;
     return;
+=======
+}
+
+function dismissTour() {
+  try {
+    window.localStorage.setItem(tourStorageKey, "1");
+  } catch {
+    // ignore
+>>>>>>> main
   }
 
+<<<<<<< codex/audit-scorm-persistence-in-vue-course-25wg87
   const targetEl = resolveSpotlightElement(activeTourStep.value);
   if (!targetEl) {
     spotlightStyle.value = null;
@@ -421,6 +432,119 @@ onBeforeUnmount(() => {
   const el = getMainScroller();
   if (el) el.removeEventListener("scroll", updateBottomState);
 
+=======
+function getMainScroller(): HTMLElement | null {
+  const raw = mainContentEl.value;
+  if (!raw) return null;
+  if (raw instanceof HTMLElement) return raw;
+  return (raw.$el as HTMLElement) ?? null;
+}
+
+function updateBottomState() {
+  const el = getMainScroller();
+  if (!el) {
+    atBottom.value = false;
+    return;
+  }
+
+  atBottom.value = el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
+}
+
+function resolveSpotlightElement(step: TourStep): HTMLElement | null {
+  return document.querySelector<HTMLElement>(step.selector);
+}
+
+function updateSpotlight() {
+  if (!tourDialog.value || !activeTourStep.value) {
+    spotlightStyle.value = null;
+    return;
+  }
+
+  const targetEl = resolveSpotlightElement(activeTourStep.value);
+  if (!targetEl) {
+    spotlightStyle.value = null;
+    return;
+  }
+
+  const rect = targetEl.getBoundingClientRect();
+  spotlightStyle.value = {
+    top: `${Math.max(8, rect.top - 8)}px`,
+    left: `${Math.max(8, rect.left - 8)}px`,
+    width: `${Math.max(40, rect.width + 16)}px`,
+    height: `${Math.max(40, rect.height + 16)}px`
+  };
+}
+
+function ensureStepVisible(step: TourStep) {
+  if (!step.forceScrollBottom) return;
+  const scroller = getMainScroller();
+  if (!scroller) return;
+
+  scroller.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" });
+  window.setTimeout(updateBottomState, 120);
+}
+
+function goToTourStep(idx: number) {
+  if (idx < 0 || idx > tourSteps.length - 1) return;
+  tourStepIndex.value = idx;
+  ensureStepVisible(tourSteps[idx]);
+  window.setTimeout(updateSpotlight, 200);
+}
+
+function nextTourStep() {
+  if (tourStepIndex.value >= tourSteps.length - 1) {
+    dismissTour();
+    closeTour();
+    return;
+  }
+
+  goToTourStep(tourStepIndex.value + 1);
+}
+
+function openTour() {
+  tourDialog.value = true;
+  goToTourStep(0);
+}
+
+function closeTour() {
+  tourDialog.value = false;
+  spotlightStyle.value = null;
+}
+
+function goToChapter(targetRoute: string) {
+  if (!targetRoute) return;
+  router.push(targetRoute);
+  const el = getMainScroller();
+  if (el) el.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+watch([tourDialog, tourStepIndex, showChapterPager], () => {
+  window.setTimeout(updateSpotlight, 0);
+});
+
+onMounted(() => {
+  const el = getMainScroller();
+  if (el) el.addEventListener("scroll", updateBottomState, { passive: true });
+
+  window.addEventListener("resize", updateSpotlight, { passive: true });
+  window.addEventListener("scroll", updateSpotlight, { passive: true });
+
+  updateBottomState();
+
+  try {
+    if (!window.localStorage.getItem(tourStorageKey)) {
+      openTour();
+    }
+  } catch {
+    // ignore
+  }
+});
+
+onBeforeUnmount(() => {
+  const el = getMainScroller();
+  if (el) el.removeEventListener("scroll", updateBottomState);
+
+>>>>>>> main
   window.removeEventListener("resize", updateSpotlight);
   window.removeEventListener("scroll", updateSpotlight);
 
