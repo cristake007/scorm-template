@@ -8,6 +8,7 @@
 html,
 body {
   height: 100%;
+  overflow: hidden;
   margin: 0;
   background: var(--color-bg);
   color: var(--text-default);
@@ -31,4 +32,7 @@ img {
     animation: none !important;
     scroll-behavior: auto !important;
   }
+}
+#app {
+  height: 100%;
 }
