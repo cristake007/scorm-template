@@ -18,6 +18,9 @@
         <v-img v-if="logoUrl" :src="logoUrl" max-height="40" max-width="140" contain class="mr-2" />
         <v-btn class="ml-2" variant="text" prepend-icon="mdi-help-circle-outline" @click="openTour">How to navigate</v-btn>
       </v-app-bar>
+      <div class="appBarScrollTrack" aria-hidden="true">
+        <div class="appBarScrollValue" :style="{ transform: `scaleX(${scrollProgress})` }" />
+      </div>
 
       <v-navigation-drawer
         ref="navDrawerEl"
@@ -192,7 +195,7 @@ const nextRoute = computed(() =>
 );
 const showChapterPager = computed(() => atBottom.value && (!!prevRoute.value || !!nextRoute.value));
 
-const MIN_W = 280;
+const MIN_W = 320;
 const MAX_W = () => Math.min(520, window.innerWidth - 80);
 const drawerWidth = ref(360);
 const openLessons = ref(new Set<string>());
@@ -202,6 +205,7 @@ const mainContentEl = ref<any>(null);
 const navDrawerEl = ref<any>(null);
 const pagerEl = ref<any>(null);
 const atBottom = ref(false);
+const scrollProgress = ref(0);
 
 const tourDialog = ref(false);
 const tourStepIndex = ref(0);
@@ -312,9 +316,13 @@ function updateBottomState() {
   const el = getMainScroller();
   if (!el) {
     atBottom.value = false;
+    scrollProgress.value = 0;
     return;
   }
-  atBottom.value = el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
+  const maxScroll = Math.max(0, el.scrollHeight - el.clientHeight);
+  const currentScroll = Math.max(0, Math.min(el.scrollTop, maxScroll));
+  atBottom.value = currentScroll + el.clientHeight >= el.scrollHeight - 4;
+  scrollProgress.value = maxScroll > 0 ? currentScroll / maxScroll : 0;
 }
 
 function resolveSpotlightElement(step: TourStep): HTMLElement | null {
@@ -406,8 +414,11 @@ onMounted(() => {
   updateBottomState();
 
   try {
-    if (!window.localStorage.getItem(tourStorageKey)) {
-      openTour();
+    const seenTour = window.localStorage.getItem(tourStorageKey) === "1";
+    if (!seenTour) {
+      window.setTimeout(() => {
+        if (!tourDialog.value) openTour();
+      }, 300);
     }
   } catch {
     // ignore

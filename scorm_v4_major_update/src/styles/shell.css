@@ -6,6 +6,8 @@
 .v-main {
   overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   height: calc(100vh - 80px);
 }
 
