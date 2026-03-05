@@ -20,6 +20,8 @@ import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/components.css";
 import "./styles/shell.css";
+import "./styles/app-shell.css";
+import "./styles/page-view.css";
 
 const vuetify = createVuetify({
   icons: { defaultSet: "mdi", aliases, sets: { mdi } }

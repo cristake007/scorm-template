@@ -1,0 +1,17 @@
+.pageRoot {
+  display: block;
+}
+
+.pageBlocks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pageView__subtitle {
+  margin-bottom: 10px;
+}
+
+.manualCompleteWrap {
+  margin-top: 16px;
+}

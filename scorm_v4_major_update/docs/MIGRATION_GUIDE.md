@@ -1,36 +1,41 @@
 # 5-Minute Guide: Add a New Lesson
 
-## 1) Edit `course.json`
-Add a new lesson object under `course.lessons` with:
-- unique `id`
+## 1) Create a lesson file
+Add a new file under:
+
+`src/content/course/lessons/<lesson-id>.json`
+
+Use this shape:
+- `id`
 - `title`
-- one or more `chapters` with unique `id` + `route` + `page.blocks`
+- `chapters[]` with `id`, `route`, `page.blocks`
 
-`buildRoutes()` will auto-register chapter routes from this JSON.
+## 2) Register lesson order
+Open `src/content/course/meta.json` and append your lesson id to `lessonOrder`.
 
-## 2) Add content blocks only
-Use existing block types in each chapter's `page.blocks`.
-No router or SCORM code changes are required.
+## 3) Add chapter content only
+Add blocks in the chapter `page.blocks` array. Reuse existing block types.
+No router code changes are required.
 
-## 3) Completion mode
-Set chapter completion in JSON:
+## 4) Configure completion
+Set per chapter completion mode:
 - `manual`
 - `viewed`
 - `quiz`
 - `viewed+quiz`
 
-`PageView` + `progressStore.reconcileCourseState()` handle the rest.
+`PageView` + `progressStore.reconcileCourseState()` handle completion state updates.
 
-## 4) Validate locally
+## 5) Validate
 Run:
 ```bash
 npm run build
 ```
 
-## 5) LMS smoke test
-- Launch SCO in LMS
-- Complete content in new lesson
+## 6) LMS smoke test
+- Launch in LMS
+- Complete a chapter in new lesson
 - Refresh
-- Verify bookmark + completion persist
+- Verify bookmark + suspend data persistence
 
-If running outside LMS, offline mode persists to localStorage automatically.
+> If no LMS API is present, offline mode persists state via localStorage.

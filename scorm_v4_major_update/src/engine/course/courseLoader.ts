@@ -312,8 +312,37 @@ function assertUnique(name: string, key: string, seen: Set<string>) {
 }
 
 export async function loadCourse(): Promise<CourseModel> {
-  const mod = await import("../../content/course.json");
-  const course = mod.default as CourseModel;
+  const legacyMod = await import("../../content/course.json");
+  const legacyCourse = legacyMod.default as CourseModel;
+
+  let course: CourseModel = legacyCourse;
+
+  try {
+    const metaMod = await import("../../content/course/meta.json");
+    const lessonModules = import.meta.glob("../../content/course/lessons/*.json", { eager: true });
+
+    const meta = metaMod.default as Omit<CourseModel, "lessons"> & { lessonOrder?: string[] };
+    const lessons = Object.values(lessonModules)
+      .map((m: any) => m.default as CourseLesson)
+      .sort((a, b) => {
+        const order = meta.lessonOrder ?? [];
+        const ai = order.indexOf(a.id);
+        const bi = order.indexOf(b.id);
+        if (ai === -1 && bi === -1) return a.id.localeCompare(b.id);
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+      });
+
+    if (lessons.length) {
+      course = {
+        ...meta,
+        lessons
+      } as CourseModel;
+    }
+  } catch {
+    // Keep legacy course.json fallback for backward compatibility.
+  }
 
   // defaults
   course.unlockMode ??= "linear";
