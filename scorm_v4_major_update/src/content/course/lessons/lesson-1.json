@@ -210,6 +210,87 @@
           {
             "type": "scroll.sentinel",
             "text": "Bottom reached ✅"
+          },
+          {
+            "id": "l1-scenario-demo",
+            "type": "scenario.decisionTree",
+            "title": "Mini scenario",
+            "prompt": "A colleague asks for data access.",
+            "startNodeId": "s1",
+            "nodes": [
+              {
+                "id": "s1",
+                "text": "How do you respond?",
+                "choices": [
+                  {
+                    "id": "s1a",
+                    "label": "Grant access instantly",
+                    "feedback": "Not recommended without approval.",
+                    "nextNodeId": "s2"
+                  },
+                  {
+                    "id": "s1b",
+                    "label": "Validate need and request approval",
+                    "feedback": "Great. Follow least-privilege policy.",
+                    "nextNodeId": "s2"
+                  }
+                ]
+              },
+              {
+                "id": "s2",
+                "text": "Next step?",
+                "choices": [
+                  {
+                    "id": "s2a",
+                    "label": "Document decision",
+                    "feedback": "Correct, maintain audit trail."
+                  },
+                  {
+                    "id": "s2b",
+                    "label": "Skip documentation",
+                    "feedback": "Avoid this, documentation is required."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "l1-kpi-demo",
+            "type": "kpi.metrics",
+            "title": "Training KPI snapshot",
+            "items": [
+              {
+                "label": "Course completion",
+                "value": 91,
+                "suffix": "%"
+              },
+              {
+                "label": "First-pass quiz score",
+                "value": 84,
+                "suffix": "%"
+              },
+              {
+                "label": "Policy violations",
+                "value": 12,
+                "suffix": "%",
+                "prefix": "-"
+              }
+            ]
+          },
+          {
+            "id": "l1-beforeafter-demo",
+            "type": "comparison.beforeAfter",
+            "title": "Process modernization",
+            "before": [
+              "Manual approvals in email",
+              "No shared checklist",
+              "Late status updates"
+            ],
+            "after": [
+              "Workflow approvals in platform",
+              "Shared checklist template",
+              "Automated status updates"
+            ]
           }
         ]
       }

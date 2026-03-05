@@ -16,29 +16,11 @@
 
         <v-spacer />
         <v-img v-if="logoUrl" :src="logoUrl" max-height="40" max-width="140" contain class="mr-2" />
-        <v-btn class="ml-2" variant="text" prepend-icon="mdi-help-circle-outline" @click="tourDialog = true">How to navigate</v-btn>
-        <v-dialog v-model="tourDialog" max-width="620">
-          <v-card class="tourDialog">
-            <v-card-title>Welcome to the course</v-card-title>
-            <v-card-text>
-              <ol class="tourDialog__list">
-                <li>Use the left navigation to open lessons and chapters.</li>
-                <li>Your location and progress are saved automatically.</li>
-                <li>Complete required chapters to unlock the next lessons.</li>
-                <li>Use the <b>Finish course</b> button at the end of the final chapter.</li>
-              </ol>
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer />
-              <v-btn variant="text" @click="showTourOnNextLaunch">Show on next launch</v-btn>
-              <v-btn variant="text" @click="tourDialog = false">Close</v-btn>
-              <v-btn color="primary" @click="dismissTour">Got it</v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+        <v-btn class="ml-2" variant="text" prepend-icon="mdi-help-circle-outline" @click="openTour">How to navigate</v-btn>
       </v-app-bar>
 
       <v-navigation-drawer
+        ref="navDrawerEl"
         v-model="drawerOpen"
         :width="drawerWidth"
         :temporary="!mdAndUp"
@@ -124,13 +106,32 @@
       </v-navigation-drawer>
 
       <v-main id="mainContent" ref="mainContentEl" tabindex="-1">
-        <div v-if="showChapterPager" class="chapterPager" aria-label="Chapter navigation">
+        <div v-if="showChapterPager" ref="pagerEl" class="chapterPager" aria-label="Chapter navigation">
           <v-btn v-if="prevRoute" icon="mdi-chevron-left" color="primary" class="chapterPager__btn" @click="goToChapter(prevRoute)" />
           <v-btn v-if="nextRoute" icon="mdi-chevron-right" color="primary" class="chapterPager__btn" @click="goToChapter(nextRoute)" />
         </div>
         <router-view />
       </v-main>
     </v-layout>
+
+    <v-dialog v-model="tourDialog" max-width="720" persistent>
+      <v-card class="tourDialog">
+        <v-card-title>{{ activeTourStep?.title || 'Course tour' }}</v-card-title>
+        <v-card-text>
+          <p class="tourDialog__text">{{ activeTourStep?.description }}</p>
+          <div class="tourDialog__progress">Step {{ tourStepIndex + 1 }} of {{ tourSteps.length }}</div>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn variant="text" @click="showTourOnNextLaunch">Show on next launch</v-btn>
+          <v-spacer />
+          <v-btn variant="text" @click="closeTour">Skip</v-btn>
+          <v-btn variant="text" :disabled="tourStepIndex === 0" @click="tourStepIndex -= 1">Back</v-btn>
+          <v-btn color="primary" @click="nextTourStep">{{ tourStepIndex === tourSteps.length - 1 ? 'Done' : 'Next' }}</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <div v-if="tourDialog && spotlightStyle" class="tourSpotlight" :style="spotlightStyle" aria-hidden="true" />
   </v-app>
 </template>
 
@@ -150,6 +151,12 @@ defineProps<{
   logoUrl?: string;
 }>();
 
+type TourStep = {
+  title: string;
+  description: string;
+  target: "drawer" | "pager" | "content";
+};
+
 const runtime = inject(RuntimeStoreKey);
 if (!runtime) throw new Error("RuntimeStore not provided");
 
@@ -165,7 +172,10 @@ watch(mdAndUp, (isDesktop) => {
 watch(
   () => route.fullPath,
   () => {
-    window.setTimeout(updateBottomState, 0);
+    window.setTimeout(() => {
+      updateBottomState();
+      updateSpotlight();
+    }, 0);
   }
 );
 
@@ -183,16 +193,39 @@ const nextRoute = computed(() =>
 );
 const showChapterPager = computed(() => atBottom.value && (!!prevRoute.value || !!nextRoute.value));
 
-
 const MIN_W = 280;
 const MAX_W = () => Math.min(520, window.innerWidth - 80);
 const drawerWidth = ref(360);
 const openLessons = ref(new Set<string>());
 const resizing = ref(false);
 const resizerEl = ref<HTMLElement | null>(null);
-const tourDialog = ref(false);
 const mainContentEl = ref<any>(null);
+const navDrawerEl = ref<any>(null);
+const pagerEl = ref<any>(null);
 const atBottom = ref(false);
+
+const tourDialog = ref(false);
+const tourStepIndex = ref(0);
+const spotlightStyle = ref<Record<string, string> | null>(null);
+const tourSteps: TourStep[] = [
+  {
+    title: "Course navigation",
+    description: "Use this drawer to open lessons and jump directly to chapters.",
+    target: "drawer"
+  },
+  {
+    title: "Chapter quick navigation",
+    description: "When you reach the bottom, quick previous/next chapter buttons appear at the lower-right.",
+    target: "pager"
+  },
+  {
+    title: "Finishing the course",
+    description: "On the final chapter you will see a Finish course button. It is enabled only after all required lessons are completed.",
+    target: "content"
+  }
+];
+
+const activeTourStep = computed(() => tourSteps[tourStepIndex.value] ?? null);
 
 let onMove: ((e: PointerEvent) => void) | null = null;
 let onUp: ((e: PointerEvent) => void) | null = null;
@@ -245,18 +278,16 @@ function startResize(e: PointerEvent) {
 
 const tourStorageKey = `tour-seen:${runtime.course.course.id}:v${runtime.course.course.version}`;
 
-
 function showTourOnNextLaunch() {
   try {
     window.localStorage.removeItem(tourStorageKey);
   } catch {
     // ignore
   }
-  tourDialog.value = false;
+  closeTour();
 }
 
 function dismissTour() {
-  tourDialog.value = false;
   try {
     window.localStorage.setItem(tourStorageKey, "1");
   } catch {
@@ -271,6 +302,18 @@ function getMainScroller(): HTMLElement | null {
   return (raw.$el as HTMLElement) ?? null;
 }
 
+function getDrawerElement(): HTMLElement | null {
+  const raw = navDrawerEl.value;
+  if (!raw) return null;
+  return (raw.$el as HTMLElement) ?? raw;
+}
+
+function getPagerElement(): HTMLElement | null {
+  const raw = pagerEl.value;
+  if (!raw) return null;
+  return (raw.$el as HTMLElement) ?? raw;
+}
+
 function updateBottomState() {
   const el = getMainScroller();
   if (!el) {
@@ -281,6 +324,56 @@ function updateBottomState() {
   atBottom.value = el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
 }
 
+function getSpotlightTarget(): HTMLElement | null {
+  if (!activeTourStep.value) return null;
+  if (activeTourStep.value.target === "drawer") return getDrawerElement();
+  if (activeTourStep.value.target === "pager") return getPagerElement() || getMainScroller();
+  return getMainScroller();
+}
+
+function updateSpotlight() {
+  if (!tourDialog.value) {
+    spotlightStyle.value = null;
+    return;
+  }
+
+  const targetEl = getSpotlightTarget();
+  if (!targetEl) {
+    spotlightStyle.value = null;
+    return;
+  }
+
+  const rect = targetEl.getBoundingClientRect();
+  spotlightStyle.value = {
+    top: `${Math.max(8, rect.top - 10)}px`,
+    left: `${Math.max(8, rect.left - 10)}px`,
+    width: `${Math.max(40, rect.width + 20)}px`,
+    height: `${Math.max(40, rect.height + 20)}px`
+  };
+}
+
+function nextTourStep() {
+  if (tourStepIndex.value >= tourSteps.length - 1) {
+    dismissTour();
+    closeTour();
+    return;
+  }
+
+  tourStepIndex.value += 1;
+  window.setTimeout(updateSpotlight, 0);
+}
+
+function openTour() {
+  tourStepIndex.value = 0;
+  tourDialog.value = true;
+  window.setTimeout(updateSpotlight, 0);
+}
+
+function closeTour() {
+  tourDialog.value = false;
+  spotlightStyle.value = null;
+}
+
 function goToChapter(targetRoute: string) {
   if (!targetRoute) return;
   router.push(targetRoute);
@@ -288,14 +381,22 @@ function goToChapter(targetRoute: string) {
   if (el) el.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+watch([tourDialog, tourStepIndex, showChapterPager], () => {
+  window.setTimeout(updateSpotlight, 0);
+});
+
 onMounted(() => {
   const el = getMainScroller();
   if (el) el.addEventListener("scroll", updateBottomState, { passive: true });
+
+  window.addEventListener("resize", updateSpotlight, { passive: true });
+  window.addEventListener("scroll", updateSpotlight, { passive: true });
+
   updateBottomState();
 
   try {
     if (!window.localStorage.getItem(tourStorageKey)) {
-      tourDialog.value = true;
+      openTour();
     }
   } catch {
     // ignore
@@ -305,6 +406,9 @@ onMounted(() => {
 onBeforeUnmount(() => {
   const el = getMainScroller();
   if (el) el.removeEventListener("scroll", updateBottomState);
+
+  window.removeEventListener("resize", updateSpotlight);
+  window.removeEventListener("scroll", updateSpotlight);
 
   document.documentElement.classList.remove("no-select");
   if (onMove) window.removeEventListener("pointermove", onMove);

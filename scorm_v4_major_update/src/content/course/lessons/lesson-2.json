@@ -305,6 +305,89 @@
             ]
           },
           {
+            "id": "l2-ch2-scenario",
+            "type": "scenario.decisionTree",
+            "title": "Decision simulation: reporting a risky event",
+            "prompt": "Choose how you would react as a team lead.",
+            "startNodeId": "start",
+            "nodes": [
+              {
+                "id": "start",
+                "text": "A teammate reports an unapproved process change in production.",
+                "choices": [
+                  {
+                    "id": "a",
+                    "label": "Ignore it for now",
+                    "feedback": "Risk increases. You should acknowledge and triage immediately.",
+                    "nextNodeId": "escalation"
+                  },
+                  {
+                    "id": "b",
+                    "label": "Acknowledge and investigate impact",
+                    "feedback": "Correct first step. Capture impact and communicate next actions.",
+                    "nextNodeId": "escalation"
+                  }
+                ]
+              },
+              {
+                "id": "escalation",
+                "text": "What is your next action?",
+                "choices": [
+                  {
+                    "id": "c",
+                    "label": "Escalate through official change channel",
+                    "feedback": "Great choice. This keeps auditability and ownership clear."
+                  },
+                  {
+                    "id": "d",
+                    "label": "Fix silently and move on",
+                    "feedback": "Not ideal. Silent fixes hurt transparency and compliance."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "l2-ch2-kpi",
+            "type": "kpi.metrics",
+            "title": "Post-rollout training impact",
+            "durationMs": 1400,
+            "items": [
+              {
+                "label": "Completion rate",
+                "value": 94,
+                "suffix": "%"
+              },
+              {
+                "label": "Avg. quiz score",
+                "value": 87,
+                "suffix": "%"
+              },
+              {
+                "label": "Escalation time",
+                "value": 18,
+                "suffix": " min"
+              }
+            ]
+          },
+          {
+            "id": "l2-ch2-before-after",
+            "type": "comparison.beforeAfter",
+            "title": "Policy flow improvements",
+            "beforeTitle": "Before",
+            "afterTitle": "After",
+            "before": [
+              "Updates tracked in chat threads",
+              "No explicit owner for approval",
+              "Incident recap not standardized"
+            ],
+            "after": [
+              "Change requests logged in one system",
+              "Owner assigned per release",
+              "Post-incident recap template required"
+            ]
+          },
+          {
             "type": "scroll.sentinel",
             "text": "Bottom reached ✅"
           }
