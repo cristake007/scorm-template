@@ -28,7 +28,7 @@
 .navDrawer .v-navigation-drawer__content {
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: 6px;
+  padding: 8px 0;
 }
 
 .drawerClosed .scorm-page {
