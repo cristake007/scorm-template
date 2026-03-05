@@ -1,4 +1,4 @@
-# Template Architecture (Vue 3 + SCORM 2004)
+# Template Architecture (Vue 3 + SCORM 2004 3rd Edition)
 
 ## Revised Folder Structure
 
@@ -22,27 +22,32 @@ src/
       guards.ts                # Progress/bookmark enforcement
     progress/                  # Reconciliation and persistence logic
   scorm/
-    scormClient.ts             # SCORM API client adapter (LMS/offline)
+    scormClient.ts             # SCORM API client adapter (LMS/offline dev)
     useScormRuntime.ts         # Runtime orchestration composable
   content/
     course/
-      meta.json                # Global course/system metadata
+      meta.json                # Global course/system metadata + lessonOrder
       lessons/
         lesson-1.json          # One lesson per file (chapters nested)
         lesson-2.json
     course.json                # Legacy fallback only (backward compatibility)
   styles/
     base.css                   # html/body resets and global defaults
-    master.css                 # design tokens and utility primitives
+    master.css                 # color + surface design tokens
+    theme.css                  # corporate typography/spacing/button token contract
     shell.css                  # fixed shell geometry and scroll behavior
-    app-shell.css              # AppShell visual styles (nav, header)
+    app-shell.css              # AppShell visual styles + accessibility helpers
     page-view.css              # PageView-specific layout styles
+scripts/
+  validate-content.mjs         # content integrity validation gate
+  scaffold-lesson.mjs          # creates lesson boilerplate
+  scaffold-chapter.mjs         # adds chapter boilerplate to lesson
 ```
 
-## Scalability Rules
+## Professionalization Rules
 
-1. **Content is modular**: authoring happens in `content/course/lessons/*.json`, not in one monolithic file.
-2. **UI and content are separated**: layout/theme changes happen in `layouts/` + `styles/` without touching course JSON.
-3. **SCORM stays centralized**: components never call LMS directly unless through runtime/progress services.
-4. **Vue files contain template + logic only**: styles live in `src/styles/*.css` files.
-5. **Fixed frame UX**: top bar and navigation stay fixed; only content panes scroll.
+1. **Content is modular**: authoring happens in `content/course/lessons/*.json`, not a monolithic file.
+2. **Automated content QA**: run `npm run validate:content` before packaging.
+3. **UI and content are separated**: style changes happen in `styles/*.css` without editing Vue templates.
+4. **SCORM is centralized**: LMS calls flow through runtime/progress services.
+5. **Accessibility baseline**: include skip link, clear focus rings, keyboard-safe dialogs, and first-run guided onboarding.

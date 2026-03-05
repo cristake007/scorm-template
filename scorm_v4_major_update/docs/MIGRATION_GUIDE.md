@@ -1,21 +1,25 @@
 # 5-Minute Guide: Add a New Lesson
 
 ## 1) Create a lesson file
-Add a new file under:
+Run:
 
-`src/content/course/lessons/<lesson-id>.json`
+```bash
+npm run lesson:new -- lesson-4
+```
 
-Use this shape:
-- `id`
-- `title`
-- `chapters[]` with `id`, `route`, `page.blocks`
+This creates `src/content/course/lessons/lesson-4.json`.
 
 ## 2) Register lesson order
 Open `src/content/course/meta.json` and append your lesson id to `lessonOrder`.
 
 ## 3) Add chapter content only
-Add blocks in the chapter `page.blocks` array. Reuse existing block types.
-No router code changes are required.
+Either edit the generated chapter or scaffold another one:
+
+```bash
+npm run chapter:new -- lesson-4 ch-2
+```
+
+Then edit `page.blocks` and reuse existing block types.
 
 ## 4) Configure completion
 Set per chapter completion mode:
@@ -24,18 +28,20 @@ Set per chapter completion mode:
 - `quiz`
 - `viewed+quiz`
 
-`PageView` + `progressStore.reconcileCourseState()` handle completion state updates.
+`PageView` + `progressStore.reconcileCourseState()` handle completion updates.
 
-## 5) Validate
+## 5) Validate and build
 Run:
+
 ```bash
+npm run validate:content
 npm run build
 ```
 
 ## 6) LMS smoke test
-- Launch in LMS
+- Launch in LMS (SCORM 2004 3rd Edition)
 - Complete a chapter in new lesson
 - Refresh
 - Verify bookmark + suspend data persistence
 
-> If no LMS API is present, offline mode persists state via localStorage.
+> Offline fallback is enabled only in local DEV (`vite dev`) to keep production strictly LMS-backed.

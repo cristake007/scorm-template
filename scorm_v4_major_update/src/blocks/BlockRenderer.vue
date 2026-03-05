@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { computed, inject } from "vue";
-import { AppContextKey } from "../engine/appContext";
+import { RuntimeStoreKey } from "../core/runtime/runtimeStore";
 
 import QuizMcqBlock from "./QuizMcqBlock.vue";
 import VideoYouTubeBlock from "./VideoYouTubeBlock.vue";
@@ -40,7 +40,7 @@ const emit = defineEmits<{
   (e: "viewed-ids", ids: string[]): void;
 }>();
 
-const ctx = inject(AppContextKey);
+const ctx = inject(RuntimeStoreKey);
 
 // Component chooser
 const Comp = computed(() => {

@@ -1,4 +1,4 @@
-import { createApp, h, defineComponent, provide } from "vue";
+import { createApp, h, defineComponent } from "vue";
 import { createRouter, createWebHashHistory } from "vue-router";
 
 import "vuetify/styles";
@@ -9,7 +9,6 @@ import { aliases, mdi } from "vuetify/iconsets/mdi";
 import App from "./App.vue";
 
 import { installRuntimeStore } from "./core/runtime/runtimeStore";
-import { AppContextKey } from "./engine/appContext";
 import { loadCourse } from "./engine/course/courseLoader";
 import { saveProgress } from "./engine/progress/progressStore";
 import { buildRoutes } from "./engine/router/routes";
@@ -22,6 +21,7 @@ import "./styles/components.css";
 import "./styles/shell.css";
 import "./styles/app-shell.css";
 import "./styles/page-view.css";
+import "./styles/theme.css";
 
 const vuetify = createVuetify({
   icons: { defaultSet: "mdi", aliases, sets: { mdi } }
@@ -40,7 +40,6 @@ async function boot() {
   const Root = defineComponent({
     name: "Root",
     setup() {
-      provide(AppContextKey, { course, scorm: runtime.scorm, state: runtime.state });
       return () =>
         h(App as any, {
           courseTitle: course.course.title,

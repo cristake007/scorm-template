@@ -111,3 +111,32 @@
   font-size: 14px;
   font-weight: 600;
 }
+
+.tourDialog__list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  color: var(--text-default);
+}
+
+.tourDialog :focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.skipLink {
+  position: absolute;
+  left: -9999px;
+  top: var(--space-2);
+  z-index: 10000;
+  background: #fff;
+  color: #000;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: var(--space-2) var(--space-3);
+}
+
+.skipLink:focus {
+  left: var(--space-3);
+}

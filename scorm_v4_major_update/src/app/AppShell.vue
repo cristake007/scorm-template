@@ -1,9 +1,10 @@
 <template>
   <v-app>
+    <a class="skipLink" href="#mainContent">Skip to course content</a>
     <v-layout class="appLayout" :class="{ drawerClosed: !drawerOpen }">
       <v-app-bar color="surface" :elevation="2" density="comfortable" :height="80">
         <template #prepend>
-          <v-app-bar-nav-icon icon="mdi-menu" @click="drawerOpen = !drawerOpen" />
+          <v-app-bar-nav-icon icon="mdi-menu" aria-label="Toggle navigation" @click="drawerOpen = !drawerOpen" />
         </template>
 
         <v-app-bar-title class="text-no-wrap">
@@ -16,7 +17,8 @@
         <v-spacer />
         <v-img v-if="logoUrl" :src="logoUrl" max-height="40" max-width="140" contain class="mr-2" />
 
-        <v-btn color="primary" variant="tonal" :loading="isFinishing" @click="finishAndExit">Finish & Exit</v-btn>
+        <v-btn color="primary" variant="tonal" :loading="isFinishing" aria-label="Finish and exit course" @click="finishAndExit">Finish & Exit</v-btn>
+        <v-btn class="ml-2" variant="text" prepend-icon="mdi-help-circle-outline" @click="tourDialog = true">How to navigate</v-btn>
 
         <v-dialog v-model="finishDialog" max-width="520">
           <v-card>
@@ -25,6 +27,24 @@
             <v-card-actions>
               <v-spacer />
               <v-btn color="primary" @click="finishDialog = false">OK</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+        <v-dialog v-model="tourDialog" max-width="620">
+          <v-card class="tourDialog">
+            <v-card-title>Welcome to the course</v-card-title>
+            <v-card-text>
+              <ol class="tourDialog__list">
+                <li>Use the left navigation to open lessons and chapters.</li>
+                <li>Your location and progress are saved automatically.</li>
+                <li>Complete required chapters to unlock the next lessons.</li>
+                <li>Use <b>Finish &amp; Exit</b> when you complete the course.</li>
+              </ol>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn variant="text" @click="tourDialog = false">Close</v-btn>
+              <v-btn color="primary" @click="dismissTour">Got it</v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -115,7 +135,7 @@
         />
       </v-navigation-drawer>
 
-      <v-main>
+      <v-main id="mainContent" tabindex="-1">
         <router-view />
       </v-main>
     </v-layout>
@@ -123,7 +143,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, onBeforeUnmount, ref, watch } from "vue";
+import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useDisplay } from "vuetify";
 import { useRoute } from "vue-router";
 
@@ -159,6 +179,7 @@ const resizing = ref(false);
 const resizerEl = ref<HTMLElement | null>(null);
 const finishDialog = ref(false);
 const isFinishing = ref(false);
+const tourDialog = ref(false);
 
 let onMove: ((e: PointerEvent) => void) | null = null;
 let onUp: ((e: PointerEvent) => void) | null = null;
@@ -209,6 +230,17 @@ function startResize(e: PointerEvent) {
   e.preventDefault();
 }
 
+const tourStorageKey = `tour-seen:${runtime.course.course.id}`;
+
+function dismissTour() {
+  tourDialog.value = false;
+  try {
+    window.localStorage.setItem(tourStorageKey, "1");
+  } catch {
+    // ignore
+  }
+}
+
 function finishAndExit() {
   isFinishing.value = true;
   try {
@@ -217,6 +249,16 @@ function finishAndExit() {
     isFinishing.value = false;
   }
 }
+
+onMounted(() => {
+  try {
+    if (!window.localStorage.getItem(tourStorageKey)) {
+      tourDialog.value = true;
+    }
+  } catch {
+    // ignore
+  }
+});
 
 onBeforeUnmount(() => {
   document.documentElement.classList.remove("no-select");

@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "zip": "npm run build && node ./zip.mjs"
+    "build": "npm run validate:content && vite build",
+    "zip": "npm run build && node ./zip.mjs",
+    "validate:content": "node ./scripts/validate-content.mjs",
+    "lesson:new": "node ./scripts/scaffold-lesson.mjs",
+    "chapter:new": "node ./scripts/scaffold-chapter.mjs"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",

@@ -32,7 +32,7 @@ import { useRoute } from "vue-router";
 
 import BlockRenderer from "../blocks/BlockRenderer.vue";
 
-import { AppContextKey } from "../engine/appContext";
+import { RuntimeStoreKey } from "../core/runtime/runtimeStore";
 
 // ---- helpers: walk nested blocks (section + grid) ----
 type AnyBlock = any;
@@ -70,7 +70,7 @@ import {
 
 const route = useRoute();
 
-const ctx = inject(AppContextKey);
+const ctx = inject(RuntimeStoreKey);
 if (!ctx) throw new Error("Missing AppContext");
 
 const { course, state, scorm } = ctx;

@@ -31,7 +31,10 @@ function toScormDuration(ms: number): string {
 }
 
 export function useScormRuntime(course: CourseModel, router: Router): RuntimeStore {
-  const scorm = createScormClientStrict({ allowOffline: true, offlineStoragePrefix: `course:${course.course.id}` });
+  const scorm = createScormClientStrict({
+    allowOffline: import.meta.env.DEV,
+    offlineStoragePrefix: `course:${course.course.id}`
+  });
   const initialized = scorm.initialize();
 
   if (!initialized) {
