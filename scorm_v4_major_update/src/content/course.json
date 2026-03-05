@@ -1,0 +1,252 @@
+{
+  "course": { "id": "scorm-v4", "title": "SCORM v4 Template", "version": "4.0.0" },
+
+  "system": {
+    "routes": [
+      {
+        "id": "overview",
+        "title": "Overview",
+        "route": "/overview",
+        "page": {
+          "layout": { "maxWidth": "xl", "gap": "lg" },
+          "blocks": [
+            { "type": "text", "variant": "h1", "text": "Overview" },
+            { "type": "text", "variant": "muted", "text": "Select a chapter from the navigation." }
+          ]
+        }
+      }
+    ],
+    "fallbackRoute": "/overview"
+  },
+
+  "unlockMode": "linear",
+  "completionMode": "requiredChapters",
+  "scoring": { "aggregation": "best", "passRule": { "mode": "anyQuizPassed" } },
+
+  "lessons": [
+    {
+      "id": "lesson-1",
+      "title": "Lesson 1",
+      "chapters": [
+        {
+          "id": "ch-1",
+          "title": "Intro (Quizzes)",
+          "route": "/lesson-1/intro",
+          "required": true,
+          "completion": { "mode": "quiz" },
+          "page": {
+            "layout": { "maxWidth": "xl", "gap": "lg" },
+            "blocks": [
+              { "type": "text", "variant": "h1", "text": "Intro" },
+
+              {
+                "type": "quiz.mcq",
+                "quizId": "lesson-1-intro-quiz",
+                "title": "Quick check",
+                "scoreMax": 100,
+                "passScore": 80,
+                "attemptsAllowed": 0,
+                "shuffleOptions": true,
+                "questions": [
+                  {
+                    "id": "q1",
+                    "prompt": "SCORM 2004 API object name is…",
+                    "options": [
+                      { "id": "a", "text": "API_1484_11" },
+                      { "id": "b", "text": "API_11" },
+                      { "id": "c", "text": "SCORM_API" }
+                    ],
+                    "correct": ["a"]
+                  },
+                  {
+                    "id": "q2",
+                    "prompt": "Where do we store our progress state JSON?",
+                    "options": [
+                      { "id": "a", "text": "localStorage" },
+                      { "id": "b", "text": "cmi.suspend_data" },
+                      { "id": "c", "text": "cookies" }
+                    ],
+                    "correct": ["b"]
+                  }
+                ],
+                "onSubmit": { "markChapterComplete": true, "commit": true }
+              }
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "lesson-2",
+      "title": "Lesson 2 (Layout demo)",
+      "chapters": [
+        {
+          "id": "ch-2",
+          "title": "Simple Reading + Section",
+          "route": "/lesson-2/section-demo",
+          "required": true,
+          "completion": { "mode": "viewed" },
+          "page": {
+            "layout": { "maxWidth": "xl", "gap": "lg" },
+            "blocks": [
+              { "type": "text", "variant": "h1", "text": "Section + Icon List demo" },
+              { "type": "text", "text": "Below is a nested section that should render." },
+
+              {
+                "type": "section",
+                "id": "s-abbrev",
+                "title": "Abkürzungsverzeichnis",
+                "variant": "card",
+                "padding": "lg",
+                "blocks": [
+                  { "type": "text", "id": "t1", "variant": "muted", "text": "Klicken Sie, um mehr zu erfahren!" },
+                  {
+                    "type": "iconList",
+                    "id": "icons1",
+                    "items": [
+                      { "icon": "book", "label": "ML", "text": "Maschinelles Lernen (engl. Machine Learning)" },
+                      { "icon": "book", "label": "KNN", "text": "Künstliche Neuronale Netze" },
+                      { "icon": "book", "label": "Deep Learning", "text": "Tiefes Lernen, ein Teilbereich von ML" }
+                    ]
+                  }
+                ]
+              },
+
+
+              {
+                "type": "layout.grid",
+                "id": "g-intro-mixed",
+                "columns": { "sm": 1, "md": 2, "lg": 3 },
+                "gap": "lg",
+                "items": [
+                  {
+                    "id": "cell-hero",
+                    "span": 2,
+                    "blocks": [
+                      { "type": "text", "variant": "h1", "text": "Chapter Title — Overview" },
+                      {
+                        "type": "text",
+                        "variant": "muted",
+                        "text": "Read the short intro, watch the video, then answer the quick check."
+                      },
+                      {
+                        "type": "video.youtube",
+                        "title": "Watch this first",
+                        "mode": "embed",
+                        "videoId": "dQw4w9WgXcQ",
+                        "start": 10,
+                        "privacyMode": true
+                      }
+                    ]
+                  },
+
+                  {
+                    "id": "cell-image",
+                    "blocks": [
+                      { "type": "text", "variant": "h2", "text": "Diagram" },
+                      {
+                        "type": "image",
+                        "src": "./assets/images/diagram-1.png",
+                        "alt": "Process diagram",
+                        "ratio": "16/9",
+                        "rounded": "lg"
+                      },
+                      { "type": "text", "text": "Key idea: this diagram represents the flow from A → B → C." }
+                    ]
+                  },
+
+                  {
+                    "id": "cell-section",
+                    "blocks": [
+                      {
+                        "type": "section",
+                        "id": "sec-abbrev",
+                        "title": "Abbreviations",
+                        "variant": "card",
+                        "padding": "lg",
+                        "blocks": [
+                          { "type": "text", "variant": "muted", "text": "Quick reference list:" },
+                          {
+                            "type": "iconList",
+                            "id": "icons-abbrev",
+                            "items": [
+                              { "icon": "book", "label": "SCORM", "text": "Sharable Content Object Reference Model" },
+                              { "icon": "book", "label": "LMS", "text": "Learning Management System" },
+                              { "icon": "info", "label": "CMI", "text": "Computer Managed Instruction (SCORM data model)" }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+
+                  {
+                    "id": "cell-quiz",
+                    "span": 2,
+                    "blocks": [
+                      {
+                        "type": "quiz.mcq",
+                        "quizId": "ch-mixed-quiz-1",
+                        "title": "Quick check",
+                        "scoreMax": 100,
+                        "passScore": 80,
+                        "attemptsAllowed": 0,
+                        "shuffleOptions": true,
+                        "questions": [
+                          {
+                            "id": "q1",
+                            "prompt": "Where does our course store progress JSON?",
+                            "options": [
+                              { "id": "a", "text": "localStorage" },
+                              { "id": "b", "text": "cmi.suspend_data" },
+                              { "id": "c", "text": "cookies" }
+                            ],
+                            "correct": ["b"]
+                          },
+                          {
+                            "id": "q2",
+                            "prompt": "SCORM 2004 API object name is…",
+                            "options": [
+                              { "id": "a", "text": "API_1484_11" },
+                              { "id": "b", "text": "API_11" },
+                              { "id": "c", "text": "SCORM_API" }
+                            ],
+                            "correct": ["a"]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+
+                  {
+                    "id": "cell-video-link",
+                    "blocks": [
+                      { "type": "text", "variant": "h2", "text": "Optional video (opens in new tab)" },
+                      {
+                        "type": "video.youtube",
+                        "title": "Optional: Deep dive",
+                        "mode": "link",
+                        "videoId": "3RsmRMqX2IY"
+                      }
+                    ]
+                  },
+
+                  {
+                    "id": "cell-end",
+                    "blocks": [
+                      { "type": "text", "text": "When you’re done, scroll to the bottom." },
+                      { "type": "scroll.sentinel", "text": "Bottom reached ✅" }
+                    ]
+                  }
+                ]
+              },
+
+              { "type": "scroll.sentinel", "text": "Bottom reached ✅" }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

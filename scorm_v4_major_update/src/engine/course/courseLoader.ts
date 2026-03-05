@@ -1,0 +1,335 @@
+// src/engine/course/courseLoader.ts
+
+export type LayoutTokens = {
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "full";
+  gap?: "sm" | "md" | "lg";
+};
+
+export type ChapterCompletionMode = "manual" | "viewed" | "quiz" | "viewed+quiz";
+
+export type ChapterCompletion = {
+  mode?: ChapterCompletionMode; // default: "manual" if quiz exists => "quiz" else "viewed"
+};
+
+export type BlockBase = {
+  type: string;
+  id?: string; // recommended for viewed tracking
+  requiredView?: boolean; // default true for content blocks; false for decorative blocks
+};
+
+// ---- Basic content blocks ----
+export type TextBlock = BlockBase & {
+  type: "text";
+  text: string;
+  variant?: "body" | "muted" | "h1" | "h2";
+};
+
+export type ImageBlock = BlockBase & {
+  type: "image";
+  src: string;
+  alt?: string;
+  ratio?: "16/9" | "4/3" | "1/1";
+  rounded?: "md" | "lg" | "xl";
+};
+
+export type Hotspot = {
+  id: string;
+  xPct: number;
+  yPct: number;
+  wPct?: number;
+  hPct?: number;
+  label?: string;
+  text: string;
+};
+
+export type HotspotImageBlock = BlockBase & {
+  type: "image.hotspots";
+  title?: string;
+  src: string;
+  alt?: string;
+  hotspots: Hotspot[];
+  requireAllClicks?: boolean;
+
+  // NEW:
+  display?: "panel" | "tooltip"; // default "panel"
+};
+
+// ✅ NEW: Section (nested blocks)
+export type SectionBlock = BlockBase & {
+  type: "section";
+  title?: string;
+  variant?: "card" | "plain"; // default "card"
+  padding?: "sm" | "md" | "lg"; // default "md"
+  blocks: Block[]; // <-- nested blocks
+};
+
+export type DragWordsPart = { t?: string; blankId?: string };
+
+export type DragWordsQuizBlock = BlockBase & {
+  type: "quiz.dragWords";
+  quizId: string;
+  title?: string;
+  scoreMax: number;
+  passScore: number;
+  parts: DragWordsPart[];
+  words: { id: string; text: string }[];
+  correct: Record<string, string>;
+};
+
+// ---- YouTube video block (online) ----
+export type YouTubeBlock = BlockBase & {
+  type: "video.youtube";
+  title?: string;
+
+  /**
+   * embed  -> render an iframe inside the course
+   * link   -> render a thumbnail + button that opens a new tab
+   */
+  mode?: "embed" | "link";
+
+  /** For embed mode (preferred). Either videoId or embedUrl must be provided. */
+  videoId?: string;
+  embedUrl?: string;
+
+  /** For link mode. If omitted, the UI will derive it from videoId/embedUrl when possible. */
+  url?: string;
+
+  start?: number;
+  privacyMode?: boolean;
+};
+
+// ---- Accordion block (offline) ----
+export type AccordionItem = {
+  id?: string; // stable tracking id; auto-generated if missing
+  title: string;
+  body: string;
+};
+
+export type AccordionBlock = BlockBase & {
+  type: "accordion";
+  title?: string;
+  items: AccordionItem[];
+  requireAllExpanded?: boolean; // default true
+};
+
+// ---- Flip card block ----
+export type FlipCardBlock = BlockBase & {
+  type: "flipcard";
+  title?: string;
+  front: string;
+  back: string;
+  requireFlip?: boolean; // default true
+};
+
+// ---- Scroll sentinel (end-of-page) ----
+export type ScrollSentinelBlock = BlockBase & {
+  type: "scroll.sentinel";
+  text?: string;
+};
+
+// ---- Quiz blocks (scored) ----
+export type McqQuestion = {
+  id: string;
+  prompt: string;
+  options: { id: string; text: string }[];
+  correct: string[]; // option ids
+  multi?: boolean; // if true, user must select all correct
+};
+
+export type QuizOnSubmit = {
+  markChapterComplete?: boolean; // default false
+  commit?: boolean; // default true
+};
+
+export type McqQuizBlock = BlockBase & {
+  type: "quiz.mcq";
+  quizId: string;
+  title?: string;
+  scoreMax: number; // e.g., 100
+  passScore: number; // e.g., 80
+  attemptsAllowed?: number; // 0 or undefined => unlimited
+  shuffleOptions?: boolean;
+  questions: McqQuestion[];
+  onSubmit?: QuizOnSubmit;
+};
+
+// ✅ NEW: Icon list (like your screenshot)
+export type IconListBlock = BlockBase & {
+  type: "iconList";
+  title?: string;
+  items: Array<{
+    id?: string;
+    icon?: "info" | "book" | "check" | "dot";
+    label: string;
+    text: string;
+  }>;
+};
+
+export type GridBreakpointCols = {
+  sm?: number; // default 1
+  md?: number; // >= 960px
+  lg?: number; // >= 1280px
+  xl?: number; // >= 1920px
+};
+
+export type GridItem = {
+  id?: string;          // optional stable id for the cell (not required)
+  span?: number;        // column span
+  blocks: Block[];      // nested blocks
+};
+
+export type GridBlock = BlockBase & {
+  type: "layout.grid";
+  columns?: GridBreakpointCols;   // responsive columns
+  gap?: "sm" | "md" | "lg";       // spacing between cells
+  items: GridItem[];
+};
+
+export type Block =
+  | TextBlock
+  | ImageBlock
+  | YouTubeBlock
+  | McqQuizBlock
+  | AccordionBlock
+  | FlipCardBlock
+  | ScrollSentinelBlock
+  | HotspotImageBlock
+  | DragWordsQuizBlock
+  | SectionBlock
+  | IconListBlock
+  | GridBlock;
+
+export type PageModel = {
+  layout?: LayoutTokens;
+  blocks: Block[];
+};
+
+export type CourseChapter = {
+  id: string;
+  title: string;
+  route: string;
+  required?: boolean; // default true
+  completion?: ChapterCompletion;
+  page: PageModel;
+};
+
+export type CourseLesson = {
+  id: string;
+  title: string;
+  chapters: CourseChapter[];
+};
+
+export type SystemRoute = {
+  id: string;
+  title: string;
+  route: string;
+  page: PageModel;
+};
+
+export type ScoringConfig = {
+  aggregation?: "best" | "latest" | "average";
+  passRule?: { mode: "anyQuizPassed" } | { mode: "overallPercentAtLeast"; value: number };
+};
+
+export type CourseModel = {
+  course: { id: string; title: string; version: string };
+  system?: { routes?: SystemRoute[]; fallbackRoute?: string };
+  unlockMode?: "linear";
+  completionMode?: "requiredChapters";
+  scoring?: ScoringConfig;
+  lessons: CourseLesson[];
+};
+
+// ✅ UPDATED: now recurses into section.blocks and assigns ids for nested blocks too
+function normalizeBlockIds(chRoute: string, blocks: Block[]) {
+  // 1) Validate special blocks
+  for (const b of blocks) {
+    if (b.type === "video.youtube") {
+      const yt = b as any;
+      const mode = (yt.mode ?? "embed") as "embed" | "link";
+
+      if (mode === "embed") {
+        if (!yt.videoId && !yt.embedUrl) {
+          throw new Error(`video.youtube block (mode: embed) must have videoId or embedUrl (route: ${chRoute})`);
+        }
+      } else {
+        if (!yt.url && !yt.videoId && !yt.embedUrl) {
+          throw new Error(`video.youtube block (mode: link) must have url OR videoId/embedUrl (route: ${chRoute})`);
+        }
+      }
+    }
+  }
+
+  // 2) Assign stable ids + requiredView defaults (top level)
+  blocks.forEach((b, idx) => {
+    if (!b.id) b.id = `${chRoute}::${b.type}::${idx + 1}`;
+
+    if (b.requiredView == null) {
+      b.requiredView = !(b.type === "accordion" || b.type === "flipcard");
+    }
+  });
+
+  // 3) Normalize accordion item ids
+  blocks.forEach((b) => {
+    if (b.type !== "accordion") return;
+    const acc = b as any as { id: string; items: any[] };
+    (acc.items ?? []).forEach((it, i) => {
+      if (!it.id) it.id = `${acc.id}::item::${i + 1}`;
+    });
+  });
+
+  // 4) ✅ Recurse into nested blocks (section + grid)
+  blocks.forEach((b) => {
+    if (b.type === "section") {
+      const sec = b as any as { blocks?: Block[]; id: string };
+      if (sec.blocks?.length) normalizeBlockIds(`${chRoute}::${b.id}`, sec.blocks);
+    }
+
+    if (b.type === "layout.grid") {
+      const g = b as any as { items?: Array<{ id?: string; blocks?: Block[] }> };
+      (g.items ?? []).forEach((it, i) => {
+        if (it.blocks?.length) normalizeBlockIds(`${chRoute}::${b.id}::cell::${i + 1}`, it.blocks);
+      });
+    }
+  });
+}
+
+export async function loadCourse(): Promise<CourseModel> {
+  const mod = await import("../../content/course.json");
+  const course = mod.default as CourseModel;
+
+  course.unlockMode ??= "linear";
+  course.completionMode ??= "requiredChapters";
+  course.scoring ??= { aggregation: "best", passRule: { mode: "anyQuizPassed" } };
+
+  course.system ??= { routes: [], fallbackRoute: "/overview" };
+  course.system.routes ??= [];
+
+  // Validate + normalize chapters
+  for (const lesson of course.lessons) {
+    for (const ch of lesson.chapters) {
+      ch.required = ch.required ?? true;
+      if (!ch.route?.startsWith("/")) throw new Error(`Chapter route must start with "/": ${lesson.id}/${ch.id}`);
+      if (!ch.page?.blocks?.length) throw new Error(`Missing page.blocks for ${lesson.id}/${ch.id}`);
+
+      // assign block ids for viewed tracking (✅ now also covers nested blocks)
+      normalizeBlockIds(ch.route, ch.page.blocks);
+
+      // default completion mode:
+      const hasQuiz = ch.page.blocks.some((b) => String((b as any).type).startsWith("quiz."));
+      const mode = ch.completion?.mode;
+      if (!mode) {
+        ch.completion = { mode: hasQuiz ? "quiz" : "viewed" };
+      }
+    }
+  }
+
+  // Validate system routes too
+  for (const r of course.system.routes) {
+    if (!r.route?.startsWith("/")) throw new Error(`System route must start with "/": ${r.id}`);
+    if (!r.page?.blocks?.length) throw new Error(`Missing system page.blocks for ${r.id}`);
+    normalizeBlockIds(r.route, r.page.blocks);
+  }
+
+  return course;
+}
