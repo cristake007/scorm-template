@@ -1,5 +1,5 @@
 // src/scorm/scormClient.ts
-// SCORM 2004 3rd Ed runtime adapter (API_1484_11) - STRICT (no mock).
+// SCORM 2004 3rd Ed runtime adapter (API_1484_11) with offline fallback.
 
 export type ScormLastError = {
   code: string;
@@ -29,9 +29,21 @@ type AdlWrapper = {
   doGetDiagnostic: (code: string) => string;
 };
 
+type RuntimeCall = {
+  Initialize: () => string;
+  Terminate: () => string;
+  GetValue: (key: string) => string;
+  SetValue: (key: string, value: string) => string;
+  Commit: () => string;
+  GetLastError: () => string;
+  GetErrorString: (code: string) => string;
+  GetDiagnostic: (code: string) => string;
+};
+
 export interface ScormClient {
   apiFound: boolean;
   initialized: boolean;
+  mode: "lms" | "offline";
 
   initialize(): boolean;
   terminate(): boolean;
@@ -42,11 +54,9 @@ export interface ScormClient {
 
   getLastError(): ScormLastError;
 
-  // JSON helpers
   setJson(key: string, value: unknown): boolean;
   getJson<T = any>(key: string): T | null;
 
-  // Scoring helpers (course-level)
   setScore(params: { raw: number; max: number; min?: number; passed?: boolean }): void;
 
   setCompletion(params: {
@@ -55,7 +65,8 @@ export interface ScormClient {
   }): void;
 }
 
-// ---------- utils ----------
+const SUSPEND_DATA_MAX_CHARS = 64000;
+
 function ok(res: string): boolean {
   return res === "true" || res === "1";
 }
@@ -94,10 +105,6 @@ function safeGetWindowOpener(win: Window): Window | null {
   return null;
 }
 
-/**
- * Finds SCORM 2004 API_1484_11 by walking window -> parent chain,
- * and also checks opener chain as fallback.
- */
 function findApi2004(maxDepth: number): Api2004 | null {
   const seen = new Set<Window>();
   const candidates: Window[] = [window];
@@ -133,14 +140,43 @@ function getWrapper(): AdlWrapper | null {
   }
 }
 
+function createOfflineCall(storageKeyPrefix: string): RuntimeCall {
+  const read = (key: string): string => {
+    try {
+      return window.localStorage.getItem(`${storageKeyPrefix}:${key}`) ?? "";
+    } catch {
+      return "";
+    }
+  };
+
+  const write = (key: string, value: string): boolean => {
+    try {
+      window.localStorage.setItem(`${storageKeyPrefix}:${key}`, value);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  return {
+    Initialize: () => "true",
+    Terminate: () => "true",
+    GetValue: (key: string) => read(key),
+    SetValue: (key: string, value: string) => (write(key, value) ? "true" : "false"),
+    Commit: () => "true",
+    GetLastError: () => "0",
+    GetErrorString: () => "",
+    GetDiagnostic: () => ""
+  };
+}
+
 function createLiveAdapter(maxSearchDepth: number) {
   const wrapper = getWrapper();
   const api = findApi2004(maxSearchDepth);
 
   const apiFound = !!wrapper || !!api;
 
-  // unified calls (prefer wrapper if present)
-  const call = {
+  const call: RuntimeCall = {
     Initialize(): string {
       if (wrapper) return wrapper.doInitialize();
       if (api) return api.Initialize("");
@@ -186,35 +222,48 @@ function createLiveAdapter(maxSearchDepth: number) {
   return { apiFound, call };
 }
 
-// ---------- singleton ----------
 let _scorm: ScormClient | null = null;
 
-export function createScormClientStrict(options?: { maxSearchDepth?: number }): ScormClient {
+function toScorm2004Duration(ms: number): string {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return `PT${hours}H${minutes}M${seconds}S`;
+}
+
+export function createScormClientStrict(options?: {
+  maxSearchDepth?: number;
+  allowOffline?: boolean;
+  offlineStoragePrefix?: string;
+}): ScormClient {
   if (_scorm) return _scorm;
 
   const maxSearchDepth = options?.maxSearchDepth ?? 25;
+  const allowOffline = options?.allowOffline ?? true;
+  const offlineStoragePrefix = options?.offlineStoragePrefix ?? "scorm-offline";
+
   const adapter = createLiveAdapter(maxSearchDepth);
+  const runtimeCall = adapter.apiFound ? adapter.call : createOfflineCall(offlineStoragePrefix);
 
   let sessionStartedAtMs = 0;
 
   const client: ScormClient = {
     apiFound: adapter.apiFound,
     initialized: false,
+    mode: adapter.apiFound ? "lms" : "offline",
 
     initialize(): boolean {
-      if (!client.apiFound) return false;
+      if (!adapter.apiFound && !allowOffline) return false;
       if (client.initialized) return true;
 
-      const res = adapter.call.Initialize();
+      const res = runtimeCall.Initialize();
       client.initialized = ok(res);
 
       if (client.initialized) {
         sessionStartedAtMs = Date.now();
-
-        // Allow resume by default
         client.set("cmi.exit", "suspend");
 
-        // Ensure some LMS have an explicit start state
         const cs = client.get("cmi.completion_status");
         if (!cs) client.set("cmi.completion_status", "incomplete");
       }
@@ -223,58 +272,58 @@ export function createScormClientStrict(options?: { maxSearchDepth?: number }): 
     },
 
     terminate(): boolean {
-      if (!client.apiFound) return false;
       if (!client.initialized) return true;
 
-      // Best-effort finalize attempt so LMS dashboards update
       try {
-        // If you do NOT want resume, use "normal"
-        client.set("cmi.exit", "normal");
-
-        // SCORM 2004 session_time: HH:MM:SS
+        client.set("cmi.exit", "suspend");
         const started = sessionStartedAtMs || Date.now();
-        const sec = Math.max(0, Math.round((Date.now() - started) / 1000));
-        const hh = String(Math.floor(sec / 3600)).padStart(2, "0");
-        const mm = String(Math.floor((sec % 3600) / 60)).padStart(2, "0");
-        const ss = String(sec % 60).padStart(2, "0");
-
-        client.set("cmi.session_time", `${hh}:${mm}:${ss}`);
+        client.set("cmi.session_time", toScorm2004Duration(Date.now() - started));
         client.commit();
       } catch {
         // ignore
       }
 
-      const res = adapter.call.Terminate();
+      const res = runtimeCall.Terminate();
       const okRes = ok(res);
       if (okRes) client.initialized = false;
       return okRes;
     },
 
     get(key: string): string {
-      if (!client.apiFound || !client.initialized) return "";
-      return adapter.call.GetValue(key) ?? "";
+      if (!client.initialized) return "";
+      return runtimeCall.GetValue(key) ?? "";
     },
 
     set(key: string, value: string): boolean {
-      if (!client.apiFound || !client.initialized) return false;
-      const res = adapter.call.SetValue(key, value);
-      return ok(res);
+      if (!client.initialized) return false;
+      if (key === "cmi.suspend_data" && value.length > SUSPEND_DATA_MAX_CHARS) {
+        // eslint-disable-next-line no-console
+        console.warn(`SCORM: cmi.suspend_data length ${value.length} exceeds ${SUSPEND_DATA_MAX_CHARS}.`);
+      }
+      return ok(runtimeCall.SetValue(key, value));
     },
 
     commit(): boolean {
-      if (!client.apiFound || !client.initialized) return false;
-      const res = adapter.call.Commit();
-      return ok(res);
+      if (!client.initialized) return false;
+      return ok(runtimeCall.Commit());
     },
 
     getLastError(): ScormLastError {
-      const code = adapter.call.GetLastError() ?? "0";
+      if (!adapter.apiFound) {
+        return {
+          code: "0",
+          message: "offline mode",
+          diagnostic: "SCORM API_1484_11 not found. Using localStorage fallback."
+        };
+      }
+
+      const code = runtimeCall.GetLastError() ?? "0";
       if (!code || code === "0") return { code: "0", message: "", diagnostic: "" };
 
       return {
         code,
-        message: adapter.call.GetErrorString(code) ?? "",
-        diagnostic: adapter.call.GetDiagnostic(code) ?? ""
+        message: runtimeCall.GetErrorString(code) ?? "",
+        diagnostic: runtimeCall.GetDiagnostic(code) ?? ""
       };
     },
 
@@ -317,10 +366,6 @@ export function createScormClientStrict(options?: { maxSearchDepth?: number }): 
   return client;
 }
 
-/**
- * Best-effort terminate on exit.
- * Use this plus an explicit "Exit" button in the UI.
- */
 export function installScormExitHandlers(scorm: ScormClient) {
   const onExit = () => {
     try {
