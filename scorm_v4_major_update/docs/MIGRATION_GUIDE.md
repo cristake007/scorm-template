@@ -77,3 +77,7 @@ npm run build
 
 ## 8) Course finishing rule
 The course can only be finished from the end of the final chapter, and only after all lessons are completed.
+
+
+## Guided tour behavior
+The guided tour auto-opens once per course **version**. Authors/testers can click **How to navigate** anytime, and use **Show on next launch** to replay it on the next session.

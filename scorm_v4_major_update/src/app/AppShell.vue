@@ -30,6 +30,7 @@
             </v-card-text>
             <v-card-actions>
               <v-spacer />
+              <v-btn variant="text" @click="showTourOnNextLaunch">Show on next launch</v-btn>
               <v-btn variant="text" @click="tourDialog = false">Close</v-btn>
               <v-btn color="primary" @click="dismissTour">Got it</v-btn>
             </v-card-actions>
@@ -242,7 +243,17 @@ function startResize(e: PointerEvent) {
   e.preventDefault();
 }
 
-const tourStorageKey = `tour-seen:${runtime.course.course.id}`;
+const tourStorageKey = `tour-seen:${runtime.course.course.id}:v${runtime.course.course.version}`;
+
+
+function showTourOnNextLaunch() {
+  try {
+    window.localStorage.removeItem(tourStorageKey);
+  } catch {
+    // ignore
+  }
+  tourDialog.value = false;
+}
 
 function dismissTour() {
   tourDialog.value = false;
