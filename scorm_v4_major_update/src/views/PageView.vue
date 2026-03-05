@@ -42,6 +42,7 @@ import { useRoute } from "vue-router";
 import BlockRenderer from "../blocks/BlockRenderer.vue";
 
 import { RuntimeStoreKey } from "../core/runtime/runtimeStore";
+import { recordInteraction, safeResponseString, type InteractionType } from "../scorm/scormInteractions";
 
 // ---- helpers: walk nested blocks (section + grid) ----
 type AnyBlock = any;
@@ -287,6 +288,31 @@ function onFinishCourse() {
   }
 }
 
+function resolveQuizMeta(quizId: string): { interactionType: InteractionType; description: string } {
+  const info = getCurrentChapter();
+  if (!info) {
+    return { interactionType: "other", description: `Quiz ${quizId}` };
+  }
+
+  const all = flattenBlocks(info.ch.page.blocks ?? []);
+  const quizBlock = all.find((b: any) => b?.quizId === quizId);
+  const type = String(quizBlock?.type ?? "");
+
+  if (type === "quiz.match" || quizId.includes("match")) {
+    return { interactionType: "matching", description: quizBlock?.title || `Matching quiz ${quizId}` };
+  }
+
+  if (type === "quiz.cloze" || quizId.includes("cloze")) {
+    return { interactionType: "fill-in", description: quizBlock?.title || `Cloze quiz ${quizId}` };
+  }
+
+  if (type.startsWith("quiz.")) {
+    return { interactionType: "choice", description: quizBlock?.title || `Quiz ${quizId}` };
+  }
+
+  return { interactionType: "other", description: quizBlock?.title || `Interaction ${quizId}` };
+}
+
 function onQuizSubmitted(payload: {
   quizId: string;
   raw: number;
@@ -303,53 +329,21 @@ function onQuizSubmitted(payload: {
     responses: payload.responses
   });
 
-  // Write SCORM interaction(s) for ILIAS reports (SCORM-valid learner_response formats)
   try {
-    const isMatch = payload.quizId.includes("match");
-    const isCloze = payload.quizId.includes("cloze");
-    const passed = payload.raw >= payload.passScore;
+    const { interactionType, description } = resolveQuizMeta(payload.quizId);
 
-    if (isMatch) {
-      // SCORM 2004 matching learner_response format:
-      // "leftId[.]rightId[,]leftId2[.]rightId2"
-      const pairs: string[] = [];
-      for (const [k, v] of Object.entries(payload.responses)) {
-        pairs.push(`${k}.${String(v)}`);
-      }
-      // One interaction per quiz
-      const n = Number(scorm.get("cmi.interactions._count") || "0");
-      scorm.set(`cmi.interactions.${n}.id`, payload.quizId);
-      scorm.set(`cmi.interactions.${n}.type`, "matching");
-      scorm.set(`cmi.interactions.${n}.learner_response`, pairs.join(","));
-      scorm.set(`cmi.interactions.${n}.result`, passed ? "correct" : "wrong");
-    } else if (isCloze) {
-      // SCORM 2004 fill-in learner_response:
-      // "blank1=word1[,]blank2=word2"
-      const parts: string[] = [];
-      for (const [k, v] of Object.entries(payload.responses)) {
-        parts.push(`${k}=${String(v)}`);
-      }
-      const n = Number(scorm.get("cmi.interactions._count") || "0");
-      scorm.set(`cmi.interactions.${n}.id`, payload.quizId);
-      scorm.set(`cmi.interactions.${n}.type`, "fill-in");
-      scorm.set(`cmi.interactions.${n}.learner_response`, parts.join(","));
-      scorm.set(`cmi.interactions.${n}.result`, passed ? "correct" : "wrong");
-    } else {
-      // default choice
-      const n = Number(scorm.get("cmi.interactions._count") || "0");
-      scorm.set(`cmi.interactions.${n}.id`, payload.quizId);
-      scorm.set(`cmi.interactions.${n}.type`, "choice");
-      scorm.set(
-        `cmi.interactions.${n}.learner_response`,
-        JSON.stringify(payload.responses).slice(0, 250)
-      );
-      scorm.set(`cmi.interactions.${n}.result`, passed ? "correct" : "wrong");
-    }
+    recordInteraction({
+      scorm,
+      interactionId: payload.quizId,
+      type: interactionType,
+      learnerResponse: safeResponseString(payload.responses),
+      result: payload.raw >= payload.passScore ? "correct" : "incorrect",
+      description
+    });
   } catch {
     // ignore interaction write errors (LMS variance)
   }
 
-  // After quiz submit, recompute completion
   recomputeChapterCompletion();
 }
 

@@ -114,9 +114,9 @@
       </v-main>
     </v-layout>
 
-    <v-dialog v-model="tourDialog" max-width="720" persistent>
+    <v-dialog v-model="tourDialog" max-width="760" persistent>
       <v-card class="tourDialog">
-        <v-card-title>{{ activeTourStep?.title || 'Course tour' }}</v-card-title>
+        <v-card-title>{{ activeTourStep?.title || "Course tour" }}</v-card-title>
         <v-card-text>
           <p class="tourDialog__text">{{ activeTourStep?.description }}</p>
           <div class="tourDialog__progress">Step {{ tourStepIndex + 1 }} of {{ tourSteps.length }}</div>
@@ -125,8 +125,8 @@
           <v-btn variant="text" @click="showTourOnNextLaunch">Show on next launch</v-btn>
           <v-spacer />
           <v-btn variant="text" @click="closeTour">Skip</v-btn>
-          <v-btn variant="text" :disabled="tourStepIndex === 0" @click="tourStepIndex -= 1">Back</v-btn>
-          <v-btn color="primary" @click="nextTourStep">{{ tourStepIndex === tourSteps.length - 1 ? 'Done' : 'Next' }}</v-btn>
+          <v-btn variant="text" :disabled="tourStepIndex === 0" @click="goToTourStep(tourStepIndex - 1)">Back</v-btn>
+          <v-btn color="primary" @click="nextTourStep">{{ tourStepIndex === tourSteps.length - 1 ? "Done" : "Next" }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -154,7 +154,8 @@ defineProps<{
 type TourStep = {
   title: string;
   description: string;
-  target: "drawer" | "pager" | "content";
+  selector: string;
+  forceScrollBottom?: boolean;
 };
 
 const runtime = inject(RuntimeStoreKey);
@@ -180,9 +181,7 @@ watch(
 );
 
 const overviewRoute = computed(() => runtime.course.system?.fallbackRoute || runtime.course.system?.routes?.[0]?.route || "/");
-const chapterRouteOrder = computed(() =>
-  runtime.course.lessons.flatMap((lesson) => lesson.chapters.map((chapter) => chapter.route))
-);
+const chapterRouteOrder = computed(() => runtime.course.lessons.flatMap((lesson) => lesson.chapters.map((chapter) => chapter.route)));
 
 const currentChapterIndex = computed(() => chapterRouteOrder.value.findIndex((r) => r === route.path));
 const prevRoute = computed(() => (currentChapterIndex.value > 0 ? chapterRouteOrder.value[currentChapterIndex.value - 1] : ""));
@@ -209,19 +208,25 @@ const tourStepIndex = ref(0);
 const spotlightStyle = ref<Record<string, string> | null>(null);
 const tourSteps: TourStep[] = [
   {
-    title: "Course navigation",
-    description: "Use this drawer to open lessons and jump directly to chapters.",
-    target: "drawer"
+    title: "Open lessons from the drawer",
+    description: "Start here. Expand a lesson to reveal chapters, then open any chapter from the left navigation.",
+    selector: ".v-navigation-drawer .navRow--root"
   },
   {
-    title: "Chapter quick navigation",
-    description: "When you reach the bottom, quick previous/next chapter buttons appear at the lower-right.",
-    target: "pager"
+    title: "Jump directly to chapters",
+    description: "Chapter rows show completion status and let you jump around quickly without losing progress.",
+    selector: ".v-navigation-drawer .navRow--child"
   },
   {
-    title: "Finishing the course",
-    description: "On the final chapter you will see a Finish course button. It is enabled only after all required lessons are completed.",
-    target: "content"
+    title: "Use quick previous/next controls",
+    description: "When you reach the bottom of a chapter, floating back/next buttons appear for fast navigation.",
+    selector: ".chapterPager",
+    forceScrollBottom: true
+  },
+  {
+    title: "Finish at the end",
+    description: "The Finish course button appears on the final chapter and only unlocks once all required lessons are complete.",
+    selector: ".finishCourseWrap"
   }
 ];
 
@@ -302,18 +307,6 @@ function getMainScroller(): HTMLElement | null {
   return (raw.$el as HTMLElement) ?? null;
 }
 
-function getDrawerElement(): HTMLElement | null {
-  const raw = navDrawerEl.value;
-  if (!raw) return null;
-  return (raw.$el as HTMLElement) ?? raw;
-}
-
-function getPagerElement(): HTMLElement | null {
-  const raw = pagerEl.value;
-  if (!raw) return null;
-  return (raw.$el as HTMLElement) ?? raw;
-}
-
 function updateBottomState() {
   const el = getMainScroller();
   if (!el) {
@@ -324,20 +317,17 @@ function updateBottomState() {
   atBottom.value = el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
 }
 
-function getSpotlightTarget(): HTMLElement | null {
-  if (!activeTourStep.value) return null;
-  if (activeTourStep.value.target === "drawer") return getDrawerElement();
-  if (activeTourStep.value.target === "pager") return getPagerElement() || getMainScroller();
-  return getMainScroller();
+function resolveSpotlightElement(step: TourStep): HTMLElement | null {
+  return document.querySelector<HTMLElement>(step.selector);
 }
 
 function updateSpotlight() {
-  if (!tourDialog.value) {
+  if (!tourDialog.value || !activeTourStep.value) {
     spotlightStyle.value = null;
     return;
   }
 
-  const targetEl = getSpotlightTarget();
+  const targetEl = resolveSpotlightElement(activeTourStep.value);
   if (!targetEl) {
     spotlightStyle.value = null;
     return;
@@ -345,11 +335,27 @@ function updateSpotlight() {
 
   const rect = targetEl.getBoundingClientRect();
   spotlightStyle.value = {
-    top: `${Math.max(8, rect.top - 10)}px`,
-    left: `${Math.max(8, rect.left - 10)}px`,
-    width: `${Math.max(40, rect.width + 20)}px`,
-    height: `${Math.max(40, rect.height + 20)}px`
+    top: `${Math.max(8, rect.top - 8)}px`,
+    left: `${Math.max(8, rect.left - 8)}px`,
+    width: `${Math.max(40, rect.width + 16)}px`,
+    height: `${Math.max(40, rect.height + 16)}px`
   };
+}
+
+function ensureStepVisible(step: TourStep) {
+  if (!step.forceScrollBottom) return;
+  const scroller = getMainScroller();
+  if (!scroller) return;
+
+  scroller.scrollTo({ top: scroller.scrollHeight, behavior: "smooth" });
+  window.setTimeout(updateBottomState, 120);
+}
+
+function goToTourStep(idx: number) {
+  if (idx < 0 || idx > tourSteps.length - 1) return;
+  tourStepIndex.value = idx;
+  ensureStepVisible(tourSteps[idx]);
+  window.setTimeout(updateSpotlight, 200);
 }
 
 function nextTourStep() {
@@ -359,14 +365,12 @@ function nextTourStep() {
     return;
   }
 
-  tourStepIndex.value += 1;
-  window.setTimeout(updateSpotlight, 0);
+  goToTourStep(tourStepIndex.value + 1);
 }
 
 function openTour() {
-  tourStepIndex.value = 0;
   tourDialog.value = true;
-  window.setTimeout(updateSpotlight, 0);
+  goToTourStep(0);
 }
 
 function closeTour() {
