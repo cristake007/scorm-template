@@ -2,7 +2,7 @@
   <div class="pageRoot">
     <div v-if="title" class="scorm-h1">{{ title }}</div>
 
-    <div v-if="subtitle" class="scorm-muted" style="margin-bottom: 10px">
+    <div v-if="subtitle" class="scorm-muted pageView__subtitle">
       {{ subtitle }}
     </div>
 
@@ -23,6 +23,15 @@
         Mark chapter complete
       </v-btn>
     </div>
+    <div v-if="showFinishCourse" class="finishCourseWrap">
+      <v-btn color="primary" variant="flat" :disabled="!courseCompleted" @click="onFinishCourse">
+        Finish course
+      </v-btn>
+      <div v-if="!courseCompleted" class="scorm-muted finishCourseWrap__hint">
+        Complete all required lessons before finishing the course.
+      </div>
+      <div v-if="finishError" class="finishCourseWrap__error">{{ finishError }}</div>
+    </div>
   </div>
 </template>
 
@@ -32,7 +41,7 @@ import { useRoute } from "vue-router";
 
 import BlockRenderer from "../blocks/BlockRenderer.vue";
 
-import { AppContextKey } from "../engine/appContext";
+import { RuntimeStoreKey } from "../core/runtime/runtimeStore";
 
 // ---- helpers: walk nested blocks (section + grid) ----
 type AnyBlock = any;
@@ -70,12 +79,13 @@ import {
 
 const route = useRoute();
 
-const ctx = inject(AppContextKey);
-if (!ctx) throw new Error("Missing AppContext");
+const ctx = inject(RuntimeStoreKey);
+if (!ctx) throw new Error("Missing RuntimeStore");
 
-const { course, state, scorm } = ctx;
+const { course, state, scorm, finishCourse } = ctx;
 
 const pageEl = ref<HTMLElement | null>(null);
+const finishError = ref("");
 let observer: IntersectionObserver | null = null;
 
 function getCurrentChapter() {
@@ -117,6 +127,17 @@ const showManualComplete = computed(() => {
   const info = getCurrentChapter();
   if (!info) return false;
   return (info.ch.completion?.mode ?? "manual") === "manual";
+});
+
+const courseCompleted = computed(() => state.completedLessons.length >= course.lessons.length);
+
+const chapterRoutes = computed(() =>
+  course.lessons.flatMap((lesson) => lesson.chapters.map((ch) => ch.route))
+);
+
+const showFinishCourse = computed(() => {
+  const idx = chapterRoutes.value.findIndex((r) => r === route.path);
+  return idx >= 0 && idx === chapterRoutes.value.length - 1;
 });
 
 function setupViewedObserver() {
@@ -251,12 +272,19 @@ function recomputeChapterCompletion() {
   scorm.commit();
 }
 
-function humanize(s: string) {
-  return String(s ?? "")
-    .replace(/[:]/g, " / ")
-    .replace(/[-_]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+
+
+function onFinishCourse() {
+  finishError.value = "";
+  if (!courseCompleted.value) {
+    finishError.value = "Course is not complete yet.";
+    return;
+  }
+
+  const ok = finishCourse();
+  if (!ok) {
+    finishError.value = "Could not finalize SCORM session. Please try again.";
+  }
 }
 
 function onQuizSubmitted(payload: {
@@ -343,16 +371,3 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<style scoped>
-.pageRoot {
-  display: block;
-}
-.pageBlocks {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.manualCompleteWrap {
-  margin-top: 16px;
-}
-</style>
