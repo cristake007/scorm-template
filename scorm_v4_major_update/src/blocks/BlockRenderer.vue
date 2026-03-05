@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { computed, inject } from "vue";
-import { AppContextKey } from "../engine/appContext";
+import { RuntimeStoreKey } from "../core/runtime/runtimeStore";
 
 import QuizMcqBlock from "./QuizMcqBlock.vue";
 import VideoYouTubeBlock from "./VideoYouTubeBlock.vue";
@@ -40,18 +40,22 @@ const emit = defineEmits<{
   (e: "viewed-ids", ids: string[]): void;
 }>();
 
-const ctx = inject(AppContextKey);
+const ctx = inject(RuntimeStoreKey);
 
 // Component chooser
 const Comp = computed(() => {
   switch (props.block.type) {
     case "quiz.mcq":
+    case "quiz.multipleChoice":
       return QuizMcqBlock;
     case "quiz.clozeSelect":
+    case "quiz.cloze":
       return QuizClozeSelectBlock;
     case "quiz.match":
+    case "quiz.matching":
       return QuizMatchBlock;
     case "quiz.dragWords":
+    case "quiz.drag-and-drop":
       return QuizDragWordsBlock;
 
     case "audio":

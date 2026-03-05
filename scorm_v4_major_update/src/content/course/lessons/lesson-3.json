@@ -1,0 +1,150 @@
+{
+  "id": "lesson-3",
+  "title": "Lesson 3 (locked until Lesson 2 completed)",
+  "unlockAfterLessonId": "lesson-2",
+  "chapters": [
+    {
+      "id": "ch-1",
+      "title": "Final quiz + grid wrap-up",
+      "route": "/lesson-3/final",
+      "required": true,
+      "completion": {
+        "mode": "quiz"
+      },
+      "page": {
+        "layout": {
+          "maxWidth": "xl",
+          "gap": "lg"
+        },
+        "blocks": [
+          {
+            "type": "text",
+            "variant": "h1",
+            "text": "Final checkpoint"
+          },
+          {
+            "type": "text",
+            "variant": "muted",
+            "text": "Passing this quiz can be used for course success logic."
+          },
+          {
+            "type": "layout.grid",
+            "id": "l3-grid",
+            "columns": {
+              "sm": 1,
+              "md": 2,
+              "lg": 3
+            },
+            "gap": "lg",
+            "items": [
+              {
+                "id": "l3-hero",
+                "span": 2,
+                "blocks": [
+                  {
+                    "type": "text",
+                    "variant": "h2",
+                    "text": "Big quiz card (span=2)"
+                  },
+                  {
+                    "type": "quiz.mcq",
+                    "quizId": "final-quiz",
+                    "title": "Final quiz",
+                    "scoreMax": 100,
+                    "passScore": 80,
+                    "attemptsAllowed": 0,
+                    "shuffleOptions": true,
+                    "questions": [
+                      {
+                        "id": "q1",
+                        "prompt": "Which SCORM field stores the bookmark route?",
+                        "options": [
+                          {
+                            "id": "a",
+                            "text": "cmi.location"
+                          },
+                          {
+                            "id": "b",
+                            "text": "cmi.mode"
+                          },
+                          {
+                            "id": "c",
+                            "text": "cmi.progress_measure"
+                          }
+                        ],
+                        "correct": [
+                          "a"
+                        ]
+                      },
+                      {
+                        "id": "q2",
+                        "prompt": "What field stores our progress JSON?",
+                        "options": [
+                          {
+                            "id": "a",
+                            "text": "cmi.suspend_data"
+                          },
+                          {
+                            "id": "b",
+                            "text": "cmi.exit"
+                          },
+                          {
+                            "id": "c",
+                            "text": "cmi.session_time"
+                          }
+                        ],
+                        "correct": [
+                          "a"
+                        ]
+                      }
+                    ],
+                    "onSubmit": {
+                      "markChapterComplete": true,
+                      "commit": true
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "l3-side-a",
+                "blocks": [
+                  {
+                    "type": "image",
+                    "src": "./assets/images/final-a.jpg",
+                    "alt": "Final A",
+                    "ratio": "16/9",
+                    "rounded": "lg"
+                  },
+                  {
+                    "type": "text",
+                    "variant": "muted",
+                    "text": "Compact image card."
+                  }
+                ]
+              },
+              {
+                "id": "l3-side-b",
+                "blocks": [
+                  {
+                    "type": "section",
+                    "id": "l3-sec",
+                    "title": "Exit tip",
+                    "variant": "card",
+                    "padding": "lg",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "variant": "muted",
+                        "text": "Use the Exit button to trigger terminate()."
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

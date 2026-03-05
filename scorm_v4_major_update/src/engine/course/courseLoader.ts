@@ -240,6 +240,18 @@ export type ScoringConfig = {
   passRule?: { mode: "anyQuizPassed" } | { mode: "overallPercentAtLeast"; value: number };
 };
 
+
+const BLOCK_TYPE_ALIASES: Record<string, string> = {
+  "quiz.multipleChoice": "quiz.mcq",
+  "quiz.cloze": "quiz.clozeSelect",
+  "quiz.matching": "quiz.match",
+  "quiz.drag-and-drop": "quiz.dragWords"
+};
+
+function canonicalBlockType(type: string): string {
+  return BLOCK_TYPE_ALIASES[type] ?? type;
+}
+
 export type CourseModel = {
   course: { id: string; title: string; version: string };
   system?: { routes?: SystemRoute[]; fallbackRoute?: string };
@@ -256,6 +268,8 @@ export type CourseModel = {
 function normalizeBlockIds(chRoute: string, blocks: Block[]) {
   // 1) Validate special blocks
   for (const b of blocks) {
+    b.type = canonicalBlockType(String(b.type)) as any;
+
     if (b.type === "video.youtube") {
       const yt = b as any;
       const mode = (yt.mode ?? "embed") as "embed" | "link";
@@ -312,8 +326,37 @@ function assertUnique(name: string, key: string, seen: Set<string>) {
 }
 
 export async function loadCourse(): Promise<CourseModel> {
-  const mod = await import("../../content/course.json");
-  const course = mod.default as CourseModel;
+  const legacyMod = await import("../../content/course.json");
+  const legacyCourse = legacyMod.default as CourseModel;
+
+  let course: CourseModel = legacyCourse;
+
+  try {
+    const metaMod = await import("../../content/course/meta.json");
+    const lessonModules = import.meta.glob("../../content/course/lessons/*.json", { eager: true });
+
+    const meta = metaMod.default as Omit<CourseModel, "lessons"> & { lessonOrder?: string[] };
+    const lessons = Object.values(lessonModules)
+      .map((m: any) => m.default as CourseLesson)
+      .sort((a, b) => {
+        const order = meta.lessonOrder ?? [];
+        const ai = order.indexOf(a.id);
+        const bi = order.indexOf(b.id);
+        if (ai === -1 && bi === -1) return a.id.localeCompare(b.id);
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+      });
+
+    if (lessons.length) {
+      course = {
+        ...meta,
+        lessons
+      } as CourseModel;
+    }
+  } catch {
+    // Keep legacy course.json fallback for backward compatibility.
+  }
 
   // defaults
   course.unlockMode ??= "linear";

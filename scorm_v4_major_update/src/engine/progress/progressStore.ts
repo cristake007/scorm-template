@@ -167,3 +167,34 @@ export function recordQuizAttempt(params: {
   existing.lastAttemptAt = nowIso();
   if (responses) existing.lastResponses = responses;
 }
+
+export function reconcileCourseState(params: {
+  course: CourseModel;
+  state: ProgressStateV1;
+  scorm: ScormClient;
+  touchedLessonId?: string;
+}) {
+  const { course, state, scorm, touchedLessonId } = params;
+
+  // Lesson is complete if all of its chapters are complete.
+  const lessonIds = touchedLessonId ? [touchedLessonId] : course.lessons.map((l) => l.id);
+  for (const lessonId of lessonIds) {
+    const lesson = course.lessons.find((l) => l.id === lessonId);
+    if (!lesson || !lesson.chapters.length) continue;
+
+    const done = lesson.chapters.every((ch) => state.completedChapters.includes(chapterKey(lessonId, ch.id)));
+    if (done) markLessonComplete(state, lessonId);
+  }
+
+  const totalLessons = Math.max(1, course.lessons.length);
+  const completedLessons = state.completedLessons.length;
+  const progressMeasure01 = Math.max(0, Math.min(1, completedLessons / totalLessons));
+
+  if (completedLessons >= totalLessons) {
+    scorm.setCompletion({ completionStatus: "completed" });
+  } else {
+    scorm.setCompletion({ completionStatus: "incomplete" });
+  }
+
+  scorm.set("cmi.progress_measure", progressMeasure01.toFixed(4));
+}
