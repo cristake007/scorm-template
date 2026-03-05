@@ -91,6 +91,35 @@ export type TimelineEventsBlock = BlockBase & {
   items: Array<{ id?: string; title: string; date?: string; description: string }>;
 };
 
+
+export type ScenarioDecisionTreeBlock = BlockBase & {
+  type: "scenario.decisionTree" | "decision.tree";
+  title?: string;
+  prompt: string;
+  startNodeId?: string;
+  nodes: Array<{
+    id: string;
+    text: string;
+    choices: Array<{ id: string; label: string; feedback: string; nextNodeId?: string }>;
+  }>;
+};
+
+export type KpiMetricsBlock = BlockBase & {
+  type: "kpi.metrics" | "metrics.kpi";
+  title?: string;
+  durationMs?: number;
+  items: Array<{ id?: string; label: string; value: number; prefix?: string; suffix?: string; decimals?: number }>;
+};
+
+export type BeforeAfterBlock = BlockBase & {
+  type: "comparison.beforeAfter" | "before.after";
+  title?: string;
+  beforeTitle?: string;
+  afterTitle?: string;
+  before: string[];
+  after: string[];
+};
+
 // ---- YouTube video block (online) ----
 export type YouTubeBlock = BlockBase & {
   type: "video.youtube";
@@ -214,7 +243,10 @@ export type Block =
   | IconListBlock
   | GridBlock
   | GptAgentChatBlock
-  | TimelineEventsBlock;
+  | TimelineEventsBlock
+  | ScenarioDecisionTreeBlock
+  | KpiMetricsBlock
+  | BeforeAfterBlock;
 
 export type PageModel = {
   layout?: LayoutTokens;

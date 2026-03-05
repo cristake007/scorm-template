@@ -28,6 +28,9 @@ import IconListBlock from "./IconListBlock.vue";
 import GridBlock from "./GridBlock.vue";
 import GptAgentChatBlock from "./GptAgentChatBlock.vue";
 import TimelineEventsBlock from "./TimelineEventsBlock.vue";
+import BeforeAfterBlock from "./BeforeAfterBlock.vue";
+import KpiMetricsBlock from "./KpiMetricsBlock.vue";
+import ScenarioDecisionTreeBlock from "./ScenarioDecisionTreeBlock.vue";
 
 const props = defineProps<{ block: any }>();
 
@@ -92,6 +95,15 @@ const Comp = computed(() => {
     case "timeline.events":
     case "timeline":
       return TimelineEventsBlock;
+    case "scenario.decisionTree":
+    case "decision.tree":
+      return ScenarioDecisionTreeBlock;
+    case "kpi.metrics":
+    case "metrics.kpi":
+      return KpiMetricsBlock;
+    case "comparison.beforeAfter":
+    case "before.after":
+      return BeforeAfterBlock;
 
     default:
       return "div";

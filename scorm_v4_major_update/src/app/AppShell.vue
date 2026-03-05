@@ -16,20 +16,7 @@
 
         <v-spacer />
         <v-img v-if="logoUrl" :src="logoUrl" max-height="40" max-width="140" contain class="mr-2" />
-
-        <v-btn color="primary" variant="tonal" :loading="isFinishing" aria-label="Finish and exit course" @click="finishAndExit">Finish & Exit</v-btn>
         <v-btn class="ml-2" variant="text" prepend-icon="mdi-help-circle-outline" @click="tourDialog = true">How to navigate</v-btn>
-
-        <v-dialog v-model="finishDialog" max-width="520">
-          <v-card>
-            <v-card-title>Finished</v-card-title>
-            <v-card-text>Your attempt was saved and finalized. You can now close this tab/window.</v-card-text>
-            <v-card-actions>
-              <v-spacer />
-              <v-btn color="primary" @click="finishDialog = false">OK</v-btn>
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
         <v-dialog v-model="tourDialog" max-width="620">
           <v-card class="tourDialog">
             <v-card-title>Welcome to the course</v-card-title>
@@ -38,7 +25,7 @@
                 <li>Use the left navigation to open lessons and chapters.</li>
                 <li>Your location and progress are saved automatically.</li>
                 <li>Complete required chapters to unlock the next lessons.</li>
-                <li>Use <b>Finish &amp; Exit</b> when you complete the course.</li>
+                <li>Use the <b>Finish course</b> button at the end of the final chapter.</li>
               </ol>
             </v-card-text>
             <v-card-actions>
@@ -202,8 +189,6 @@ const drawerWidth = ref(360);
 const openLessons = ref(new Set<string>());
 const resizing = ref(false);
 const resizerEl = ref<HTMLElement | null>(null);
-const finishDialog = ref(false);
-const isFinishing = ref(false);
 const tourDialog = ref(false);
 const mainContentEl = ref<any>(null);
 const atBottom = ref(false);
@@ -290,15 +275,6 @@ function goToChapter(targetRoute: string) {
   router.push(targetRoute);
   const el = getMainScroller();
   if (el) el.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function finishAndExit() {
-  isFinishing.value = true;
-  try {
-    finishDialog.value = runtime.finishCourse();
-  } finally {
-    isFinishing.value = false;
-  }
 }
 
 onMounted(() => {

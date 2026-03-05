@@ -16,7 +16,10 @@ const TYPE_ALIASES = {
   "quiz.matching": "quiz.match",
   "quiz.drag-and-drop": "quiz.dragWords",
   "gpt.agent": "agent.gptChat",
-  "timeline": "timeline.events"
+  "timeline": "timeline.events",
+  "decision.tree": "scenario.decisionTree",
+  "metrics.kpi": "kpi.metrics",
+  "before.after": "comparison.beforeAfter"
 };
 
 const blockType = TYPE_ALIASES[blockTypeArg] ?? blockTypeArg;
@@ -127,6 +130,50 @@ const templates = {
       { id: `${id}-2`, date: "Week 2", title: "Execution", description: "Implement agreed tasks." },
       { id: `${id}-3`, date: "Week 3", title: "Review", description: "Collect feedback and finalize." }
     ]
+  }),
+  "scenario.decisionTree": (id) => ({
+    id,
+    type: "scenario.decisionTree",
+    title: "Scenario Decision",
+    prompt: "Choose an action and review its consequence.",
+    startNodeId: "n1",
+    nodes: [
+      {
+        id: "n1",
+        text: "A customer reports a critical issue right before launch.",
+        choices: [
+          { id: "c1", label: "Delay launch", feedback: "Good risk mitigation. Communicate clearly.", nextNodeId: "n2" },
+          { id: "c2", label: "Launch anyway", feedback: "High risk. You should evaluate impact first.", nextNodeId: "n2" }
+        ]
+      },
+      {
+        id: "n2",
+        text: "Leadership asks for your final recommendation.",
+        choices: [
+          { id: "c3", label: "Present options with tradeoffs", feedback: "Excellent decision hygiene." }
+        ]
+      }
+    ]
+  }),
+  "kpi.metrics": (id) => ({
+    id,
+    type: "kpi.metrics",
+    title: "Business Impact",
+    durationMs: 1200,
+    items: [
+      { id: `${id}-k1`, label: "Completion rate", value: 94, suffix: "%" },
+      { id: `${id}-k2`, label: "Avg. score", value: 87, suffix: "%" },
+      { id: `${id}-k3`, label: "Time saved", value: 2.4, suffix: "h", decimals: 1 }
+    ]
+  }),
+  "comparison.beforeAfter": (id) => ({
+    id,
+    type: "comparison.beforeAfter",
+    title: "Policy Change Overview",
+    beforeTitle: "Before",
+    afterTitle: "After",
+    before: ["Manual approval by email", "No SLA visibility", "Inconsistent checklist usage"],
+    after: ["Workflow approval in system", "SLA dashboard tracking", "Standardized checklist mandatory"]
   }),
 };
 

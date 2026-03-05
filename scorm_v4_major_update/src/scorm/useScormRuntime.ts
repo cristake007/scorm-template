@@ -91,6 +91,9 @@ export function useScormRuntime(course: CourseModel, router: Router): RuntimeSto
   const finishCourse = () => {
     if (!scorm.initialized) return false;
 
+    const allLessonsCompleted = state.completedLessons.length >= course.lessons.length;
+    if (!allLessonsCompleted) return false;
+
     scorm.set("cmi.progress_measure", "1.0000");
     scorm.set("cmi.completion_status", "completed");
     scorm.set("cmi.success_status", "passed");

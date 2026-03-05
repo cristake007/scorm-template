@@ -30,6 +30,9 @@ npm run block:add -- lesson-4 ch-2 quiz.matching
 npm run block:add -- lesson-4 ch-2 quiz.drag-and-drop
 npm run block:add -- lesson-4 ch-2 gpt.agent
 npm run block:add -- lesson-4 ch-2 timeline
+npm run block:add -- lesson-4 ch-2 decision.tree
+npm run block:add -- lesson-4 ch-2 metrics.kpi
+npm run block:add -- lesson-4 ch-2 before.after
 ```
 
 Supported block templates:
@@ -42,6 +45,9 @@ Supported block templates:
 - `quiz.dragWords` / `quiz.drag-and-drop`
 - `agent.gptChat` / `gpt.agent`
 - `timeline.events` / `timeline`
+- `scenario.decisionTree` / `decision.tree`
+- `kpi.metrics` / `metrics.kpi`
+- `comparison.beforeAfter` / `before.after`
 
 ## 5) Configure completion
 Set per chapter completion mode:
@@ -67,3 +73,7 @@ npm run build
 - Verify bookmark + suspend data persistence
 
 > Offline fallback is enabled only in local DEV (`vite dev`) to keep production strictly LMS-backed.
+
+
+## 8) Course finishing rule
+The course can only be finished from the end of the final chapter, and only after all lessons are completed.

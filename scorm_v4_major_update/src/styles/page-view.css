@@ -15,3 +15,21 @@
 .manualCompleteWrap {
   margin-top: 16px;
 }
+
+.finishCourseWrap {
+  margin-top: 24px;
+  padding: 14px;
+  border: 1px dashed var(--color-border);
+  border-radius: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.finishCourseWrap__hint {
+  font-size: 13px;
+}
+
+.finishCourseWrap__error {
+  color: var(--quiz-fail);
+  font-size: 13px;
+}

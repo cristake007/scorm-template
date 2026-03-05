@@ -23,6 +23,15 @@
         Mark chapter complete
       </v-btn>
     </div>
+    <div v-if="showFinishCourse" class="finishCourseWrap">
+      <v-btn color="primary" variant="flat" :disabled="!courseCompleted" @click="onFinishCourse">
+        Finish course
+      </v-btn>
+      <div v-if="!courseCompleted" class="scorm-muted finishCourseWrap__hint">
+        Complete all required lessons before finishing the course.
+      </div>
+      <div v-if="finishError" class="finishCourseWrap__error">{{ finishError }}</div>
+    </div>
   </div>
 </template>
 
@@ -71,11 +80,12 @@ import {
 const route = useRoute();
 
 const ctx = inject(RuntimeStoreKey);
-if (!ctx) throw new Error("Missing AppContext");
+if (!ctx) throw new Error("Missing RuntimeStore");
 
-const { course, state, scorm } = ctx;
+const { course, state, scorm, finishCourse } = ctx;
 
 const pageEl = ref<HTMLElement | null>(null);
+const finishError = ref("");
 let observer: IntersectionObserver | null = null;
 
 function getCurrentChapter() {
@@ -117,6 +127,17 @@ const showManualComplete = computed(() => {
   const info = getCurrentChapter();
   if (!info) return false;
   return (info.ch.completion?.mode ?? "manual") === "manual";
+});
+
+const courseCompleted = computed(() => state.completedLessons.length >= course.lessons.length);
+
+const chapterRoutes = computed(() =>
+  course.lessons.flatMap((lesson) => lesson.chapters.map((ch) => ch.route))
+);
+
+const showFinishCourse = computed(() => {
+  const idx = chapterRoutes.value.findIndex((r) => r === route.path);
+  return idx >= 0 && idx === chapterRoutes.value.length - 1;
 });
 
 function setupViewedObserver() {
@@ -251,6 +272,20 @@ function recomputeChapterCompletion() {
   scorm.commit();
 }
 
+
+
+function onFinishCourse() {
+  finishError.value = "";
+  if (!courseCompleted.value) {
+    finishError.value = "Course is not complete yet.";
+    return;
+  }
+
+  const ok = finishCourse();
+  if (!ok) {
+    finishError.value = "Could not finalize SCORM session. Please try again.";
+  }
+}
 
 function onQuizSubmitted(payload: {
   quizId: string;

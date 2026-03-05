@@ -67,3 +67,10 @@ This works both in content files and in CLI block scaffolding.
 Additional block aliases:
 - `gpt.agent` -> `agent.gptChat`
 - `timeline` -> `timeline.events`
+
+- `decision.tree` -> `scenario.decisionTree`
+- `metrics.kpi` -> `kpi.metrics`
+- `before.after` -> `comparison.beforeAfter`
+
+
+Finish rule: users can finalize only from the final chapter end CTA after course completion state is achieved.
