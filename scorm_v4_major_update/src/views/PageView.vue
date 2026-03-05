@@ -2,7 +2,7 @@
   <div class="pageRoot">
     <div v-if="title" class="scorm-h1">{{ title }}</div>
 
-    <div v-if="subtitle" class="scorm-muted" style="margin-bottom: 10px">
+    <div v-if="subtitle" class="scorm-muted pageView__subtitle">
       {{ subtitle }}
     </div>
 
@@ -32,7 +32,7 @@ import { useRoute } from "vue-router";
 
 import BlockRenderer from "../blocks/BlockRenderer.vue";
 
-import { AppContextKey } from "../engine/appContext";
+import { RuntimeStoreKey } from "../core/runtime/runtimeStore";
 
 // ---- helpers: walk nested blocks (section + grid) ----
 type AnyBlock = any;
@@ -70,7 +70,7 @@ import {
 
 const route = useRoute();
 
-const ctx = inject(AppContextKey);
+const ctx = inject(RuntimeStoreKey);
 if (!ctx) throw new Error("Missing AppContext");
 
 const { course, state, scorm } = ctx;
@@ -251,13 +251,6 @@ function recomputeChapterCompletion() {
   scorm.commit();
 }
 
-function humanize(s: string) {
-  return String(s ?? "")
-    .replace(/[:]/g, " / ")
-    .replace(/[-_]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
 
 function onQuizSubmitted(payload: {
   quizId: string;
@@ -343,16 +336,3 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<style scoped>
-.pageRoot {
-  display: block;
-}
-.pageBlocks {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.manualCompleteWrap {
-  margin-top: 16px;
-}
-</style>

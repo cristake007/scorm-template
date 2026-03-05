@@ -1,155 +1,38 @@
-/* src/styles/shell.css */
+/* App shell structural layout: fixed frame + independent scroll regions */
+.appLayout {
+  height: 100vh;
+}
 
-/* Drawer surface + allow resizer to sit outside */
+.v-main {
+  overflow-x: hidden;
+  overflow-y: auto;
+  height: calc(100vh - 80px);
+}
+
+.v-main__wrap {
+  display: flex;
+  justify-content: center;
+  min-height: 100%;
+}
+
 .navDrawer {
   position: relative;
   border-right: 1px solid var(--color-border);
   background: var(--color-surface);
   overflow: visible;
+  height: calc(100vh - 80px) !important;
 }
 
-/* Ensure the internal drawer content doesn't cover the resizer area */
 .navDrawer .v-navigation-drawer__content {
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: 6px; /* leaves breathing room so resizer hover area is reachable */
+  padding-right: 6px;
 }
 
-/* Prevent horizontal scrollbars in main area and center the route view */
-.v-main { overflow-x: hidden; }
-.v-main__wrap { display: flex; justify-content: center; }
-
-/* When drawer is closed, allow wider content */
-.drawerClosed .scorm-page { max-width: var(--page-max-wide); }
-
-/* ---------- Nav list look (like your target UI) ---------- */
-
-/* Remove Vuetify overlay/underlay so our backgrounds show */
-.navRow .v-btn__overlay,
-.navRow .v-btn__underlay {
-  opacity: 0 !important;
+.drawerClosed .scorm-page {
+  max-width: var(--page-max-wide);
 }
 
-/* Base row styling */
-.navRow {
-  width: 100% !important;
-  min-width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border-radius: 0 !important;
-  justify-content: flex-start !important;
-  text-transform: none !important;
-  letter-spacing: normal !important;
-  color: var(--text-default);
-}
-
-/* Ensure content spans row width */
-.navRow .v-btn__content {
-  width: 100%;
-  justify-content: flex-start;
-}
-
-/* Your inner layout already exists in the template */
-.navRow__inner {
-  width: 100%;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 14px 16px;
-  gap: 12px;
-}
-
-.navRow__left {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  min-width: 0;
-  flex: 1;
-}
-
-.navRow__index {
-  width: 18px;
-  text-align: right;
-  color: rgba(0, 0, 0, 0.55);
-  flex: 0 0 auto;
-}
-
-.navRow__text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  flex: 1;
-}
-
-.navRow__title {
-  font-size: 14px;
-  line-height: 1.25;
-  white-space: normal;
-}
-
-.navRow__title--bold { font-weight: 800; }
-
-.navRow__subtitle {
-  margin-top: 2px;
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.2;
-}
-
-.navRow__right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 0 0 auto;
-  padding-top: 2px;
-}
-
-/* Hover */
-.navRow:not(.v-btn--disabled):hover,
-.navRow:not(.v-btn--disabled):focus-visible {
-  background: rgba(0, 0, 0, 0.05) !important;
-}
-
-/* Active row (chapter selected) */
-.navRow--active {
-  background: rgba(25, 118, 210, 0.12) !important;
-}
-
-/* Make active text + icons primary-ish */
-.navRow--active .navRow__title,
-.navRow--active .navRow__subtitle,
-.navRow--active .navRow__index {
-  color: var(--color-primary) !important;
-}
-
-/* Child indentation + slightly tighter row */
-.navRow--child .navRow__inner {
-  padding-left: 22px; /* indent like the screenshot */
-  padding-top: 12px;
-  padding-bottom: 12px;
-}
-
-/* Root (lesson / overview) looks like a section header */
-.navRow--root .navRow__inner {
-  padding-top: 12px;
-  padding-bottom: 12px;
-}
-
-.navRow--root .navRow__title {
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-weight: 800;
-}
-
-/* Divider */
-.navDivider {
-  height: 1px;
-  width: 100%;
-  background: var(--color-border);
-}
-
-/* Locked message styling */
 .navLockedMsg {
   margin: 12px;
   padding: 10px 12px;
@@ -159,7 +42,12 @@
   color: var(--text-muted);
 }
 
-/* ---------- Drawer resizer (blue hover bar) ---------- */
+.navDivider {
+  height: 1px;
+  width: 100%;
+  background: var(--color-border);
+}
+
 .drawerResizer {
   position: absolute;
   top: 0;
@@ -169,7 +57,7 @@
   cursor: col-resize;
   background: transparent;
   touch-action: none;
-  z-index: 9999; /* ensure it stays above drawer content */
+  z-index: 9999;
 }
 
 .drawerResizer::after {
@@ -183,55 +71,18 @@
   transition: background 0.12s ease;
 }
 
-.drawerResizer:hover::after { background: var(--color-primary); }
-.navDrawer.isResizing .drawerResizer::after { background: var(--color-primary); }
-
-/* DEBUG: if you don't see a thick red border around the drawer, CSS isn't loading */
-.navDrawer {
-  outline: 6px solid red !important;
+.drawerResizer:hover::after,
+.navDrawer.isResizing .drawerResizer::after {
+  background: var(--color-primary);
 }
 
-/* smoother resize: disable transitions during drag */
 .navDrawer.isResizing,
-.navDrawer.isResizing * {
+.navDrawer.isResizing *,
+.navDrawer.isResizing ~ .v-main,
+.navDrawer.isResizing ~ .v-main * {
   transition: none !important;
 }
 
 .navDrawer.isResizing {
   will-change: width;
 }
-
-/* some Vuetify layouts animate subtly; disable during resize */
-.navDrawer.isResizing ~ .v-main,
-.navDrawer.isResizing ~ .v-main * {
-  transition: none !important;
-}
-
-/* ROOT rows = section header feel */
-.navRow--root {
-  background: transparent !important;
-}
-.navRow--root .navRow__title {
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-weight: 800;
-  color: rgba(0,0,0,.78);
-}
-.navRow--root:not(.navRow--active):hover {
-  background: transparent !important;
-}
-
-/* CHILD rows = list items */
-.navRow--child .navRow__inner {
-  padding-top: 12px;
-  padding-bottom: 12px;
-  padding-left: 22px;
-}
-.navRow--child .navRow__title {
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.navRow--root:not(.navRow--active):hover { background: rgba(0,0,0,0.03) !important; }
-.navRow--child:not(.navRow--active):hover { background: rgba(0,0,0,0.06) !important; }
