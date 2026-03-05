@@ -1,7 +1,0 @@
-:root{
-  --color-surface: #ffffff;
-  --color-border: rgba(0,0,0,.12);
-  --color-primary: #1976d2; /* Vuetify default-ish */
-  --app-bg: #f6f7fb;
-  --text-muted: rgba(0,0,0,.65);
-}
