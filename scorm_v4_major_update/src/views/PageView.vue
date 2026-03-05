@@ -10,7 +10,8 @@
       <div
         v-for="(b, idx) in blocks"
         :key="b.id || idx"
-        class="scorm-block"
+        :id="blockDomId(b, idx)"
+        :class="['scorm-block', blockStyleClass(b, idx)]"
         :data-block-id="b.id"
       >
         <BlockRenderer :block="b" @viewed-ids="onViewedIds" @quiz-submitted="onQuizSubmitted" />
@@ -42,7 +43,8 @@ import { useRoute } from "vue-router";
 import BlockRenderer from "../blocks/BlockRenderer.vue";
 
 import { RuntimeStoreKey } from "../core/runtime/runtimeStore";
-import { recordInteraction, safeResponseString, type InteractionType } from "../scorm/scormInteractions";
+import { safeResponseString, type InteractionType } from "../scorm/scormInteractions";
+import { writeInteraction } from "../scorm/scormReporting";
 
 // ---- helpers: walk nested blocks (section + grid) ----
 type AnyBlock = any;
@@ -69,6 +71,24 @@ function flattenBlocks(blocks: AnyBlock[]): AnyBlock[] {
 
 function findBlockById(blocks: AnyBlock[], id: string): AnyBlock | undefined {
   return flattenBlocks(blocks).find((b) => b?.id === id);
+}
+
+function toKebab(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+}
+
+function blockStyleClass(block: AnyBlock, idx: number) {
+  const rawId = String(block?.id || `idx-${idx}`);
+  return `scorm-block--${toKebab(rawId) || `idx-${idx}`}`;
+}
+
+function blockDomId(block: AnyBlock, idx: number) {
+  const rawId = String(block?.id || `idx-${idx}`);
+  return `block-${toKebab(rawId) || `idx-${idx}`}`;
 }
 
 import {
@@ -332,12 +352,12 @@ function onQuizSubmitted(payload: {
   try {
     const { interactionType, description } = resolveQuizMeta(payload.quizId);
 
-    recordInteraction({
+    writeInteraction({
       scorm,
       interactionId: payload.quizId,
       type: interactionType,
       learnerResponse: safeResponseString(payload.responses),
-      result: payload.raw >= payload.passScore ? "correct" : "incorrect",
+      result: payload.raw >= payload.passScore ? "correct" : "wrong",
       description
     });
   } catch {

@@ -1,6 +1,7 @@
 // src/engine/progress/progressStore.ts
 import type { ScormClient } from "../../scorm/scormClient";
 import type { CourseModel } from "../course/courseLoader";
+import { writeCourseObjective } from "../../scorm/scormReporting";
 
 export type ScoreEntry = {
   attempts: number;
@@ -223,11 +224,16 @@ export function reconcileCourseState(params: {
   const completedLessons = state.completedLessons.length;
   const progressMeasure01 = Math.max(0, Math.min(1, completedLessons / totalLessons));
 
-  if (completedLessons >= totalLessons) {
-    scorm.setCompletion({ completionStatus: "completed" });
-  } else {
-    scorm.setCompletion({ completionStatus: "incomplete" });
-  }
+  const completionStatus = completedLessons >= totalLessons ? "completed" : "incomplete";
 
+  scorm.setCompletion({ completionStatus });
   scorm.set("cmi.progress_measure", progressMeasure01.toFixed(4));
+
+  writeCourseObjective({
+    scorm,
+    objectiveId: course.course.id,
+    completionStatus,
+    successStatus: "unknown",
+    progressMeasure01
+  });
 }
