@@ -15,26 +15,19 @@
 
         <v-spacer />
         <v-img v-if="logoUrl" :src="logoUrl" max-height="40" max-width="140" contain class="mr-2" />
-        
 
-        <v-btn color="primary" variant="tonal" @click="finishAndExit">
-          Finish & Exit
-        </v-btn>
+        <v-btn color="primary" variant="tonal" :loading="isFinishing" @click="finishAndExit">Finish & Exit</v-btn>
 
         <v-dialog v-model="finishDialog" max-width="520">
           <v-card>
             <v-card-title>Finished</v-card-title>
-            <v-card-text>
-              Your attempt was saved and finalized. You can now close this tab/window.
-            </v-card-text>
+            <v-card-text>Your attempt was saved and finalized. You can now close this tab/window.</v-card-text>
             <v-card-actions>
               <v-spacer />
-              <v-btn color="primary" @click="finishDialog=false">OK</v-btn>
+              <v-btn color="primary" @click="finishDialog = false">OK</v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
-
-
       </v-app-bar>
 
       <v-navigation-drawer
@@ -46,13 +39,13 @@
         :class="{ isResizing: resizing }"
       >
         <v-btn
-          to="/overview"
+          :to="overviewRoute"
           variant="text"
           block
           rounded="0"
           :ripple="false"
           class="navRow navRow--root"
-          :class="{ 'navRow--active': route.path === '/overview' }"
+          :class="{ 'navRow--active': route.path === overviewRoute }"
         >
           <div class="navRow__inner">
             <div class="navRow__left">
@@ -64,31 +57,14 @@
         <div class="navDivider"></div>
 
         <template v-for="lesson in nav" :key="lesson.lessonId">
-          <v-btn
-            variant="text"
-            block
-            rounded="0"
-            :ripple="false"
-            class="navRow navRow--root"
-            @click="toggleLesson(lesson.lessonId)"
-          >
+          <v-btn variant="text" block rounded="0" :ripple="false" class="navRow navRow--root" @click="toggleLesson(lesson.lessonId)">
             <div class="navRow__inner">
               <div class="navRow__left">
                 <span class="navRow__title">{{ lesson.title }}</span>
               </div>
-              <div class="navRow__right">
-                <div style="display:flex; align-items:center; gap:10px;">
-                  <v-progress-circular
-                    :model-value="lesson.progressPercent"
-                    size="18"
-                    width="2"
-                    color="primary"
-                  />
-                  <v-icon
-                    :icon="isLessonOpen(lesson.lessonId) ? 'mdi-chevron-up' : 'mdi-chevron-down'"
-                    :color="isLessonOpen(lesson.lessonId) ? 'primary' : 'grey'"
-                  />
-                </div>
+              <div class="navRow__right navRow__right--compact">
+                <v-progress-circular :model-value="lesson.progressPercent" size="18" width="2" color="primary" />
+                <v-icon :icon="isLessonOpen(lesson.lessonId) ? 'mdi-chevron-up' : 'mdi-chevron-down'" :color="isLessonOpen(lesson.lessonId) ? 'primary' : 'grey'" />
               </div>
             </div>
           </v-btn>
@@ -97,33 +73,28 @@
 
           <div v-show="isLessonOpen(lesson.lessonId)">
             <v-btn
-              v-for="(ch, idx) in lesson.chapters"
-              :key="ch.route"
-              :to="ch.route"
+              v-for="(chapter, idx) in lesson.chapters"
+              :key="chapter.route"
+              :to="chapter.route"
               variant="text"
               block
               rounded="0"
               :ripple="false"
               class="navRow navRow--child"
-              :disabled="false"
-              :class="{ 'navRow--active': route.path === ch.route }"
+              :class="{ 'navRow--active': route.path === chapter.route }"
             >
               <div class="navRow__inner">
                 <div class="navRow__left">
                   <span class="navRow__index">{{ idx + 1 }}</span>
-
                   <div class="navRow__text">
-                    <div class="navRow__title" :class="{ 'navRow__title--bold': route.path === ch.route }">
-                      {{ ch.title }}
+                    <div class="navRow__title" :class="{ 'navRow__title--bold': route.path === chapter.route }">
+                      {{ chapter.title }}
                     </div>
                   </div>
                 </div>
 
                 <div class="navRow__right">
-                  <v-icon
-                    :icon="ch.completed ? 'mdi-check-circle-outline' : 'mdi-check-circle-outline'"
-                    :color="ch.completed ? 'primary' : 'grey-lighten-1'"
-                  />
+                  <v-icon icon="mdi-check-circle-outline" :color="chapter.completed ? 'primary' : 'grey-lighten-1'" />
                 </div>
               </div>
             </v-btn>
@@ -132,9 +103,7 @@
           </div>
         </template>
 
-        <div v-if="lockedMessage" class="navLockedMsg">
-          {{ lockedMessage }}
-        </div>
+        <div v-if="lockedMessage" class="navLockedMsg">{{ lockedMessage }}</div>
 
         <div
           v-if="mdAndUp"
@@ -154,11 +123,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onBeforeUnmount, inject } from "vue";
+import { computed, inject, onBeforeUnmount, ref, watch } from "vue";
 import { useDisplay } from "vuetify";
 import { useRoute } from "vue-router";
+
 import type { NavLesson } from "../engine/navigation/navModel";
-import { AppContextKey } from "../engine/appContext";
+import { RuntimeStoreKey } from "../core/runtime/runtimeStore";
 
 defineProps<{
   courseTitle: string;
@@ -168,36 +138,38 @@ defineProps<{
   logoUrl?: string;
 }>();
 
+const runtime = inject(RuntimeStoreKey);
+if (!runtime) throw new Error("RuntimeStore not provided");
+
 const { mdAndUp } = useDisplay();
 const route = useRoute();
-
 const drawerOpen = ref(mdAndUp.value);
+
 watch(mdAndUp, (isDesktop) => {
   drawerOpen.value = isDesktop;
 });
 
+const overviewRoute = computed(() => runtime.course.system?.fallbackRoute || runtime.course.system?.routes?.[0]?.route || "/");
+
 const MIN_W = 280;
 const MAX_W = () => Math.min(520, window.innerWidth - 80);
 const drawerWidth = ref(360);
-
 const openLessons = ref(new Set<string>());
-function isLessonOpen(id: string) {
-  return openLessons.value.has(id);
-}
-function toggleLesson(id: string) {
-  const next = new Set(openLessons.value);
-  next.has(id) ? next.delete(id) : next.add(id);
-  openLessons.value = next;
-}
-
 const resizing = ref(false);
 const resizerEl = ref<HTMLElement | null>(null);
+const finishDialog = ref(false);
+const isFinishing = ref(false);
 
 let onMove: ((e: PointerEvent) => void) | null = null;
 let onUp: ((e: PointerEvent) => void) | null = null;
 
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
+const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
+const isLessonOpen = (id: string) => openLessons.value.has(id);
+
+function toggleLesson(id: string) {
+  const next = new Set(openLessons.value);
+  next.has(id) ? next.delete(id) : next.add(id);
+  openLessons.value = next;
 }
 
 function startResize(e: PointerEvent) {
@@ -225,8 +197,8 @@ function startResize(e: PointerEvent) {
     resizing.value = false;
     document.documentElement.classList.remove("no-select");
     if (raf) cancelAnimationFrame(raf);
-    window.removeEventListener("pointermove", onMove!);
-    window.removeEventListener("pointerup", onUp!);
+    if (onMove) window.removeEventListener("pointermove", onMove);
+    if (onUp) window.removeEventListener("pointerup", onUp);
     onMove = null;
     onUp = null;
   };
@@ -237,132 +209,18 @@ function startResize(e: PointerEvent) {
   e.preventDefault();
 }
 
-onBeforeUnmount(() => {
-  document.documentElement.classList.remove("no-select");
-  if (onMove) window.removeEventListener("pointermove", onMove);
-  if (onUp) window.removeEventListener("pointerup", onUp);
-});
-
-//something something test
-window.addEventListener("beforeunload", () => {
-  try {
-    if (!scorm.initialized) return;
-    scorm.set("cmi.exit", "normal");
-    scorm.commit();
-    scorm.terminate();
-  } catch {}
-});
-
-const ctx = inject(AppContextKey);
-if (!ctx) throw new Error("AppContext not provided");
-const { scorm } = ctx;
-
-const finishDialog = ref(false);
-const sessionStartMs = Date.now();
-
-function formatSessionTime(ms: number): string {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-  return `PT${h}H${m}M${s}S`;
-}
-
-
-
-function scormSetDbg(scorm: any, key: string, val: any) {
-  const v = String(val ?? "");
-  const ok = scorm.set(key, v);
-  const after = scorm.get?.(key);
-  const err = scorm.getLastError?.();
-
-  // eslint-disable-next-line no-console
-  console.log(`[SCORM set] ${key}=${v} -> ok=${ok}`, { after, err });
-
-  return ok;
-}
-
-function scormCallDbg(scorm: any, label: string, fn: () => any) {
-  try {
-    const res = fn();
-    // eslint-disable-next-line no-console
-    console.log(`[SCORM ${label}] ok`, { res, err: scorm.getLastError?.() });
-    return res;
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error(`[SCORM ${label}] FAILED`, e, { err: scorm.getLastError?.() });
-    throw e;
-  }
-}
-
-
-
-
-// function finishAndExit() {
-//   try {
-//     if (!scorm.initialized) return;
-
-//     // Finalize status (for ILIAS dashboards)
-//     scorm.set("cmi.completion_status", "completed");
-//     scorm.set("cmi.success_status", "passed");
-
-//     // Ensure attempt is ended cleanly
-//     scorm.set("cmi.exit", "normal");
-//     scorm.set("cmi.session_time", formatSessionTime(Date.now() - sessionStartMs));
-
-//     scorm.commit();
-//     scorm.terminate();
-
-//     finishDialog.value = true;
-//   } catch {
-//     // ignore
-//   }
-// }
-
-
-const isFinishing = ref(false);
-
 function finishAndExit() {
+  isFinishing.value = true;
   try {
-    if (!scorm.initialized) return;
-
-    isFinishing.value = true;
-
-    const ms = Date.now() - sessionStartMs;
-    const sessionTime = formatSessionTime(ms); // ISO duration: PT#H#M#S
-
-    console.log("[SCORM] finishAndExit start", { ms, sessionTime });
-
-    // 1) Force ILIAS-friendly “done” progress
-    scorm.set("cmi.progress_measure", "1.0000");
-    scorm.set("cmi.score.scaled", "1.0000");
-    scorm.set("cmi.score.raw", "100");
-    scorm.set("cmi.score.min", "0");
-    scorm.set("cmi.score.max", "100");
-
-    // 2) Status
-    scorm.set("cmi.completion_status", "completed");
-    scorm.set("cmi.success_status", "passed");
-
-    // 3) End attempt cleanly
-    scorm.set("cmi.session_time", sessionTime);
-
-    // NOTE: for SCORM 2004, many LMS accept "normal" or "".
-    // If ILIAS still behaves weirdly, try "" instead of "normal".
-    scorm.set("cmi.exit", "normal");
-
-    // 4) Commit + terminate
-    scorm.commit();
-    scorm.terminate();
-
-    // IMPORTANT: don’t try to scorm.get(...) after terminate — it will look empty.
-    console.log("[SCORM] finishAndExit end (terminated)");
-    finishDialog.value = true;
-  } catch (e) {
-    console.warn("[SCORM] finishAndExit failed", e);
+    finishDialog.value = runtime.finishCourse();
   } finally {
     isFinishing.value = false;
   }
 }
 
+onBeforeUnmount(() => {
+  document.documentElement.classList.remove("no-select");
+  if (onMove) window.removeEventListener("pointermove", onMove);
+  if (onUp) window.removeEventListener("pointerup", onUp);
+});
 </script>
