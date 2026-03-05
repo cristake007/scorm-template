@@ -1,0 +1,50 @@
+.pageRoot {
+  display: block;
+}
+
+.pageBlocks {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scorm-block {
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.scorm-block:hover {
+  transform: translateY(-1px);
+}
+
+.pageView__subtitle {
+  margin-bottom: 14px;
+  font-size: 17px;
+}
+
+.manualCompleteWrap {
+  margin-top: 18px;
+}
+
+.finishCourseWrap {
+  margin-top: 28px;
+  padding: 18px;
+  border: 1px dashed var(--color-border);
+  border-radius: 14px;
+  display: grid;
+  gap: 8px;
+  background: linear-gradient(180deg, #f9fbff 0%, #ffffff 100%);
+}
+
+.finishCourseWrap__hint {
+  font-size: 13px;
+}
+
+.finishCourseWrap__error {
+  color: var(--quiz-fail);
+  font-size: 13px;
+}
+
+/* Style block independently by id: #block-<id>, .scorm-block--<id> */
+[id^="block-"] {
+  scroll-margin-top: 96px;
+}

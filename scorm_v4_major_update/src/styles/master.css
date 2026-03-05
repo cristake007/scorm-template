@@ -2,29 +2,38 @@
 
 /* === EDIT HERE ONLY === */
 :root {
-  --color-primary: #1976d2;
-  --color-bg: #f6f7fb;
+  --color-primary: #0059b3;
+  --color-primary-strong: #00428a;
+  --color-primary-soft: #e9f2ff;
+  --color-bg: #f2f5fa;
   --color-surface: #ffffff;
-  --color-border: rgba(0, 0, 0, 0.12);
+  --color-border: rgba(15, 23, 42, 0.12);
 
-  --text-default: rgba(0, 0, 0, 0.87);
-  --text-muted: rgba(0, 0, 0, 0.65);
+  --text-default: #0f172a;
+  --text-muted: #5b6472;
 
   --radius-sm: 10px;
   --radius-md: 16px;
   --radius-lg: 22px;
 
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 8px 28px rgba(15, 23, 42, 0.1);
+
   --page-max: 1100px;
   --page-max-wide: 1320px;
-  --page-pad: 18px;
+  --page-pad: 24px;
 
-  --card-pad: 16px;
+  --card-pad: 18px;
   --card-radius: var(--radius-md);
   --quiz-pass: #2e7d32;
   --quiz-fail: #c62828;
 }
 
-/* Optional helper primitives you can reuse in blocks */
+body {
+  background: radial-gradient(circle at top right, #ffffff 0%, #f3f7ff 48%, #eef2f8 100%);
+  color: var(--text-default);
+}
+
 .scorm-page {
   width: 100%;
   max-width: var(--page-max);
@@ -37,10 +46,20 @@
   border: 1px solid var(--color-border);
   border-radius: var(--card-radius);
   padding: var(--card-pad);
+  box-shadow: var(--shadow-sm);
 }
 
-.scorm-h1 { margin: 0 0 10px 0; font-size: 20px; }
-.scorm-muted { margin: 0; color: var(--text-muted); }
+.scorm-h1 {
+  margin: 0 0 10px 0;
+  font-size: 28px;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.scorm-muted {
+  margin: 0;
+  color: var(--text-muted);
+}
 
 .scorm-media {
   width: 100%;
@@ -53,11 +72,12 @@
 .no-select { user-select: none; }
 
 .scorm-section--card {
-  border: 1px solid rgba(0,0,0,.08);
+  border: 1px solid rgba(15, 23, 42, 0.1);
   border-radius: 16px;
   background: #fff;
-  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  box-shadow: var(--shadow-sm);
 }
+
 .scorm-section--plain {
   border: 0;
   background: transparent;
@@ -78,4 +98,3 @@
   display: grid;
   gap: 12px;
 }
-

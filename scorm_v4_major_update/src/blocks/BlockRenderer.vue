@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { computed, inject } from "vue";
-import { AppContextKey } from "../engine/appContext";
+import { RuntimeStoreKey } from "../core/runtime/runtimeStore";
 
 import QuizMcqBlock from "./QuizMcqBlock.vue";
 import VideoYouTubeBlock from "./VideoYouTubeBlock.vue";
@@ -26,6 +26,11 @@ import QuizDragWordsBlock from "./QuizDragWordsBlock.vue";
 import SectionBlock from "./SectionBlock.vue";
 import IconListBlock from "./IconListBlock.vue";
 import GridBlock from "./GridBlock.vue";
+import GptAgentChatBlock from "./GptAgentChatBlock.vue";
+import TimelineEventsBlock from "./TimelineEventsBlock.vue";
+import BeforeAfterBlock from "./BeforeAfterBlock.vue";
+import KpiMetricsBlock from "./KpiMetricsBlock.vue";
+import ScenarioDecisionTreeBlock from "./ScenarioDecisionTreeBlock.vue";
 
 const props = defineProps<{ block: any }>();
 
@@ -40,18 +45,22 @@ const emit = defineEmits<{
   (e: "viewed-ids", ids: string[]): void;
 }>();
 
-const ctx = inject(AppContextKey);
+const ctx = inject(RuntimeStoreKey);
 
 // Component chooser
 const Comp = computed(() => {
   switch (props.block.type) {
     case "quiz.mcq":
+    case "quiz.multipleChoice":
       return QuizMcqBlock;
     case "quiz.clozeSelect":
+    case "quiz.cloze":
       return QuizClozeSelectBlock;
     case "quiz.match":
+    case "quiz.matching":
       return QuizMatchBlock;
     case "quiz.dragWords":
+    case "quiz.drag-and-drop":
       return QuizDragWordsBlock;
 
     case "audio":
@@ -80,6 +89,21 @@ const Comp = computed(() => {
 
     case "layout.grid":
       return GridBlock;
+    case "agent.gptChat":
+    case "gpt.agent":
+      return GptAgentChatBlock;
+    case "timeline.events":
+    case "timeline":
+      return TimelineEventsBlock;
+    case "scenario.decisionTree":
+    case "decision.tree":
+      return ScenarioDecisionTreeBlock;
+    case "kpi.metrics":
+    case "metrics.kpi":
+      return KpiMetricsBlock;
+    case "comparison.beforeAfter":
+    case "before.after":
+      return BeforeAfterBlock;
 
     default:
       return "div";

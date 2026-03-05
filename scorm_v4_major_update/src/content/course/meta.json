@@ -1,0 +1,88 @@
+{
+  "course": {
+    "id": "scorm-v4-explicit",
+    "title": "SCORM v4 Template — Explicit Unlocks + Grid Power",
+    "version": "4.1.0"
+  },
+  "system": {
+    "routes": [
+      {
+        "id": "overview",
+        "title": "Overview",
+        "route": "/overview",
+        "page": {
+          "layout": {
+            "maxWidth": "xl",
+            "gap": "lg"
+          },
+          "blocks": [
+            {
+              "type": "text",
+              "variant": "h1",
+              "text": "Overview"
+            },
+            {
+              "type": "text",
+              "variant": "muted",
+              "text": "Select a chapter from the navigation."
+            },
+            {
+              "type": "section",
+              "id": "ovr-howto",
+              "title": "How unlocking works in this demo",
+              "variant": "card",
+              "padding": "lg",
+              "blocks": [
+                {
+                  "type": "text",
+                  "variant": "muted",
+                  "text": "Lesson locking + explicit chapter locking are enabled."
+                },
+                {
+                  "type": "iconList",
+                  "id": "ovr-icons",
+                  "items": [
+                    {
+                      "icon": "info",
+                      "label": "Lesson 1",
+                      "text": "Free (unlocked by default)."
+                    },
+                    {
+                      "icon": "lock",
+                      "label": "Lesson 2",
+                      "text": "Unlocks after Lesson 1 is completed."
+                    },
+                    {
+                      "icon": "lock",
+                      "label": "Lesson 3",
+                      "text": "Unlocks after Lesson 2 is completed."
+                    },
+                    {
+                      "icon": "book",
+                      "label": "Chapters",
+                      "text": "Some chapters are explicitly locked; a bonus chapter is free."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "fallbackRoute": "/overview"
+  },
+  "unlockMode": "explicit",
+  "completionMode": "requiredChapters",
+  "scoring": {
+    "aggregation": "best",
+    "passRule": {
+      "mode": "anyQuizPassed"
+    }
+  },
+  "lessonOrder": [
+    "lesson-1",
+    "lesson-2",
+    "lesson-3"
+  ]
+}
