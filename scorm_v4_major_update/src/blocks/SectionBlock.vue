@@ -49,8 +49,8 @@ defineEmits<{
 
 <style scoped>
 .scorm-section--card {
-  border: 1px solid rgba(0,0,0,.08);
-  border-radius: 16px;
+  border: 0;
+  border-radius: 0;
   background: #fff;
 }
 .scorm-section--plain {

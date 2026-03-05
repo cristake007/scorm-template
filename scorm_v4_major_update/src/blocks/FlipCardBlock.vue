@@ -56,9 +56,9 @@ function toggle() {
 .flipFace {
   backface-visibility: hidden;
   transition: transform 0.35s ease;
-  border-radius: 14px;
+  border-radius: 0;
   padding: 14px;
-  border: 1px solid rgba(0,0,0,0.08);
+  border: 0;
 }
 .flipFront { transform: rotateY(0deg); }
 .flipBack { position: absolute; inset: 0; transform: rotateY(180deg); }

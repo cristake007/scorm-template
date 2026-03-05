@@ -4,6 +4,30 @@
   opacity: 0 !important;
 }
 
+.navDrawer {
+  box-shadow: none;
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  background: #f5f5f6 !important;
+}
+
+.navDrawer__header {
+  padding: 20px;
+  background: #ffffff;
+}
+
+.navDrawer__courseTitle {
+  font-size: 22px;
+  line-height: 1.24;
+  color: #0e1a2f;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.navDivider {
+  height: 1px;
+  background: rgba(17, 24, 39, 0.12);
+}
+
 .navRow {
   width: 100% !important;
   min-width: 100% !important;
@@ -26,14 +50,14 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 14px 16px;
+  padding: 20px;
   gap: 12px;
 }
 
 .navRow__left {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
   flex: 1;
 }
@@ -41,9 +65,8 @@
 .navRow__right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex: 0 0 auto;
-  padding-top: 2px;
 }
 
 .navRow__right--compact {
@@ -55,6 +78,7 @@
   text-align: right;
   color: rgba(0, 0, 0, 0.55);
   flex: 0 0 auto;
+  margin-top: 3px;
 }
 
 .navRow__text {
@@ -65,18 +89,19 @@
 }
 
 .navRow__title {
-  font-size: 14px;
-  line-height: 1.25;
+  font-size: 18px;
+  line-height: 1.3;
   white-space: normal;
   overflow-wrap: anywhere;
+  font-weight: 500;
 }
 
 .navRow__title--bold {
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .navRow--active {
-  background: rgba(25, 118, 210, 0.12) !important;
+  background: #d5dde8 !important;
 }
 
 .navRow--active .navRow__title,
@@ -86,31 +111,67 @@
 
 .navRow:not(.v-btn--disabled):hover,
 .navRow:not(.v-btn--disabled):focus-visible {
-  background: rgba(0, 0, 0, 0.05) !important;
+  background: rgba(0, 0, 0, 0.04) !important;
 }
 
 .navRow--root .navRow__inner {
-  padding-top: 12px;
-  padding-bottom: 12px;
+  padding-top: 20px;
+  padding-bottom: 20px;
 }
 
 .navRow--root .navRow__title {
-  font-size: 13px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-weight: 800;
-  color: rgba(0, 0, 0, 0.78);
+  font-size: 17px;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.86);
 }
 
 .navRow--child .navRow__inner {
-  padding-left: 22px;
-  padding-top: 12px;
-  padding-bottom: 12px;
+  padding-left: 30px;
+  padding-top: 18px;
+  padding-bottom: 18px;
 }
 
 .navRow--child .navRow__title {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+@media (max-width: 1280px) {
+  .navDrawer__courseTitle,
+  .navRow__title,
+  .navRow--root .navRow__title,
+  .navRow--child .navRow__title {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 780px) {
+  .navDrawer__courseTitle,
+  .navRow__title,
+  .navRow--root .navRow__title,
+  .navRow--child .navRow__title {
+    font-size: 15px;
+  }
+}
+
+.lesson-expand-enter-active,
+.lesson-expand-leave-active {
+  transition: max-height 260ms ease, opacity 220ms ease;
+  overflow: hidden;
+}
+
+.lesson-expand-enter-from,
+.lesson-expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.lesson-expand-enter-to,
+.lesson-expand-leave-from {
+  max-height: 1200px;
+  opacity: 1;
 }
 
 .skipLink {
@@ -120,8 +181,8 @@
   z-index: 10000;
   background: #fff;
   color: #000;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border: 0;
+  border-radius: 0;
   padding: var(--space-2) var(--space-3);
 }
 
@@ -140,6 +201,9 @@
 
 .chapterPager__btn {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  width: 52px;
+  height: 52px;
+  border-radius: 0;
 }
 
 .v-app-bar {
@@ -152,7 +216,7 @@
   top: 80px;
   left: 0;
   width: 100%;
-  height: 2px;
+  height: 3px;
   background: rgba(12, 78, 163, 0.2);
   transform-origin: left center;
   z-index: 1200;
@@ -165,25 +229,9 @@
   transform-origin: left center;
 }
 
-.navDrawer {
-  box-shadow: none;
-}
-
-.navRow--active {
-  border-left: 3px solid var(--color-primary);
-  box-shadow: inset 0 0 0 1px rgba(25,118,210,0.08);
-}
-
-.chapterPager__btn {
-  width: 52px;
-  height: 52px;
-  border-radius: 999px;
-  box-shadow: var(--shadow-md);
-}
-
 .navDrawer .navRow__title {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

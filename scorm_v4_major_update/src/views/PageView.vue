@@ -10,10 +10,11 @@
       <div
         v-for="(b, idx) in blocks"
         :key="b.id || idx"
-        :id="blockDomId(b, idx)"
-        :class="['scorm-block', blockStyleClass(b, idx)]"
+        :id="blockDomId(idx)"
+        class="scorm-block"
         :data-block-id="b.id"
-        :data-block-style-key="toKebab(String(b?.id || `idx-${idx}`))"
+        :data-block-index="idx"
+        :data-block-type="String(b?.type || 'unknown')"
       >
         <BlockRenderer :block="b" @viewed-ids="onViewedIds" @quiz-submitted="onQuizSubmitted" />
       </div>
@@ -74,22 +75,8 @@ function findBlockById(blocks: AnyBlock[], id: string): AnyBlock | undefined {
   return flattenBlocks(blocks).find((b) => b?.id === id);
 }
 
-function toKebab(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 64);
-}
-
-function blockStyleClass(block: AnyBlock, idx: number) {
-  const rawId = String(block?.id || `idx-${idx}`);
-  return `scorm-block--${toKebab(rawId) || `idx-${idx}`}`;
-}
-
-function blockDomId(block: AnyBlock, idx: number) {
-  const rawId = String(block?.id || `idx-${idx}`);
-  return `block-${toKebab(rawId) || `idx-${idx}`}`;
+function blockDomId(idx: number) {
+  return `block-${idx + 1}`;
 }
 
 import {
@@ -385,4 +372,3 @@ onBeforeUnmount(() => {
   observer = null;
 });
 </script>
-

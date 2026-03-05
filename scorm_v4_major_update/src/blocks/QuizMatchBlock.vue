@@ -186,8 +186,8 @@ function submit() {
 }
 
 .matchItem {
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
+  border: 0;
+  border-radius: 0;
   padding: 10px 12px;
   background: var(--color-surface);
   margin-bottom: 10px;
@@ -195,8 +195,8 @@ function submit() {
 }
 
 .matchTarget {
-  border: 1px dashed var(--color-border);
-  border-radius: 12px;
+  border: 0;
+  border-radius: 0;
   padding: 10px 12px;
   background: #00000005;
   margin-bottom: 10px;
