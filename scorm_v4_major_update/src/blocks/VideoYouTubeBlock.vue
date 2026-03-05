@@ -9,7 +9,7 @@
           v-if="thumbnailUrl"
           :src="thumbnailUrl"
           alt=""
-          style="width:320px;max-width:100%;height:auto;border-radius:12px;border:1px solid rgba(0,0,0,.12)"
+          style="width:320px;max-width:100%;height:auto;border-radius:0;border:0"
         />
         <div style="min-width:220px;">
           <div class="scorm-muted" style="margin-bottom:10px">
@@ -25,7 +25,7 @@
 
     <!-- EMBED MODE -->
     <template v-else>
-      <div style="position:relative;width:100%;padding-top:56.25%;border-radius:12px;overflow:hidden;">
+      <div style="position:relative;width:100%;padding-top:56.25%;border-radius:0;overflow:hidden;">
         <iframe
           :src="finalSrc"
           title="YouTube video player"

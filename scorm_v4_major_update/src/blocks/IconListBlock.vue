@@ -54,8 +54,8 @@ defineProps<{
 .iconList__icon {
   width: 28px;
   height: 28px;
-  border-radius: 999px;
-  border: 2px solid #1f5fbf;
+  border-radius: 0;
+  border: 0;
   display: grid;
   place-items: center;
   font-size: 14px;

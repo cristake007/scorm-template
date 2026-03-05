@@ -135,8 +135,8 @@ function submit() {
 <style>
 .scorm-select {
   padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid var(--color-border);
+  border-radius: 0;
+  border: 0;
   background: var(--color-surface);
 }
 </style>

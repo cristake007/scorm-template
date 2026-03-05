@@ -30,6 +30,10 @@
         class="navDrawer"
         :class="{ isResizing: resizing }"
       >
+        <div class="navDrawer__header">
+          <div class="navDrawer__courseTitle">{{ courseTitle }}</div>
+        </div>
+
         <v-btn
           :to="overviewRoute"
           variant="text"
@@ -63,36 +67,38 @@
 
           <div class="navDivider"></div>
 
-          <div v-show="isLessonOpen(lesson.lessonId)">
-            <v-btn
-              v-for="(chapter, idx) in lesson.chapters"
-              :key="chapter.route"
-              :to="chapter.route"
-              variant="text"
-              block
-              rounded="0"
-              :ripple="false"
-              class="navRow navRow--child"
-              :class="{ 'navRow--active': route.path === chapter.route }"
-            >
-              <div class="navRow__inner">
-                <div class="navRow__left">
-                  <span class="navRow__index">{{ idx + 1 }}</span>
-                  <div class="navRow__text">
-                    <div class="navRow__title" :class="{ 'navRow__title--bold': route.path === chapter.route }">
-                      {{ chapter.title }}
+          <transition name="lesson-expand">
+            <div v-if="isLessonOpen(lesson.lessonId)" class="navChapterGroup">
+              <v-btn
+                v-for="(chapter, idx) in lesson.chapters"
+                :key="chapter.route"
+                :to="chapter.route"
+                variant="text"
+                block
+                rounded="0"
+                :ripple="false"
+                class="navRow navRow--child"
+                :class="{ 'navRow--active': route.path === chapter.route }"
+              >
+                <div class="navRow__inner">
+                  <div class="navRow__left">
+                    <span class="navRow__index">{{ idx + 1 }}</span>
+                    <div class="navRow__text">
+                      <div class="navRow__title" :class="{ 'navRow__title--bold': route.path === chapter.route }">
+                        {{ chapter.title }}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div class="navRow__right">
-                  <v-icon icon="mdi-check-circle-outline" :color="chapter.completed ? 'primary' : 'grey-lighten-1'" />
+                  <div class="navRow__right">
+                    <v-icon icon="mdi-check-circle-outline" :color="chapter.completed ? 'primary' : 'grey-lighten-1'" />
+                  </div>
                 </div>
-              </div>
-            </v-btn>
+              </v-btn>
 
-            <div class="navDivider"></div>
-          </div>
+              <div class="navDivider"></div>
+            </div>
+          </transition>
         </template>
 
         <div v-if="lockedMessage" class="navLockedMsg">{{ lockedMessage }}</div>
@@ -150,6 +156,12 @@ watch(mdAndUp, (isDesktop) => {
 watch(
   () => route.fullPath,
   () => {
+    for (const lesson of runtime.course.lessons) {
+      if (lesson.chapters.some((chapter) => chapter.route === route.path)) {
+        openLessons.value = new Set([...openLessons.value, lesson.id]);
+      }
+    }
+
     window.setTimeout(() => {
       updateBottomState();
     }, 0);
@@ -177,7 +189,6 @@ const resizerEl = ref<HTMLElement | null>(null);
 const mainContentEl = ref<any>(null);
 const atBottom = ref(false);
 const scrollProgress = ref(0);
-const openLessonStorageKey = `nav-open-lessons:${runtime.course.course.id}:v${runtime.course.course.version}`;
 
 let onMove: ((e: PointerEvent) => void) | null = null;
 let onUp: ((e: PointerEvent) => void) | null = null;
@@ -190,7 +201,6 @@ function toggleLesson(id: string) {
   const next = new Set(openLessons.value);
   next.has(id) ? next.delete(id) : next.add(id);
   openLessons.value = next;
-  persistOpenLessons();
 }
 
 function startResize(e: PointerEvent) {
@@ -263,34 +273,15 @@ function lessonHasCompletedChapter(lessonId: string): boolean {
 function restoreOpenLessons() {
   const restored = new Set<string>();
 
-  try {
-    const raw = window.localStorage.getItem(openLessonStorageKey);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        for (const id of parsed) {
-          if (typeof id === "string") restored.add(id);
-        }
-      }
-    }
-  } catch {
-    // ignore invalid local storage data
-  }
+  const suspendedRoute = runtime.state.lastRoute?.split("?")[0] || "";
 
   for (const lesson of runtime.course.lessons) {
     const includesCurrentRoute = lesson.chapters.some((chapter) => chapter.route === route.path);
-    if (lessonHasCompletedChapter(lesson.id) || includesCurrentRoute) restored.add(lesson.id);
+    const includesSuspendedRoute = suspendedRoute && lesson.chapters.some((chapter) => chapter.route === suspendedRoute);
+    if (lessonHasCompletedChapter(lesson.id) || includesCurrentRoute || includesSuspendedRoute) restored.add(lesson.id);
   }
 
   openLessons.value = restored;
-}
-
-function persistOpenLessons() {
-  try {
-    window.localStorage.setItem(openLessonStorageKey, JSON.stringify(Array.from(openLessons.value)));
-  } catch {
-    // ignore
-  }
 }
 
 function goToChapter(targetRoute: string) {

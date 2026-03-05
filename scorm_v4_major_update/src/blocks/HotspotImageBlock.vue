@@ -188,9 +188,9 @@ onBeforeUnmount(() => {
 .hotspotWrap {
   position: relative;
   width: 100%;
-  border-radius: 12px;
+  border-radius: 0;
   overflow: hidden;
-  border: 1px solid rgba(0,0,0,0.08);
+  border: 0;
 }
 
 .hotspotImg {
@@ -213,9 +213,9 @@ onBeforeUnmount(() => {
   top: 50%;
   width: 14px;
   height: 14px;
-  border-radius: 999px;
+  border-radius: 0;
   transform: translate(-50%, -50%);
-  border: 2px solid rgba(0,0,0,0.55);
+  border: 0;
   background: rgba(255,255,255,0.85);
   box-shadow: 0 2px 10px rgba(0,0,0,0.15);
 }
@@ -226,8 +226,8 @@ onBeforeUnmount(() => {
 }
 
 .hotspotPanel {
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 12px;
+  border: 0;
+  border-radius: 0;
   padding: 12px;
   background: #fff;
 }
@@ -241,8 +241,8 @@ onBeforeUnmount(() => {
   min-width: 220px;
   max-width: 320px;
   padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 0;
+  border: 0;
   background: #fff;
   box-shadow: 0 10px 30px rgba(0,0,0,0.18);
   z-index: 10;

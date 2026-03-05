@@ -193,8 +193,8 @@ function submit() {
   min-width: 86px;
   padding: 2px 6px;
   margin: 0 6px;
-  border-radius: 10px;
-  border: 1px dashed var(--color-border);
+  border-radius: 0;
+  border: 0;
   background: #00000005;
   vertical-align: baseline;
 }
@@ -210,9 +210,9 @@ function submit() {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid var(--color-border);
+  border: 0;
   background: var(--color-surface);
-  border-radius: 999px;
+  border-radius: 0;
   padding: 2px 8px;
 }
 
@@ -228,9 +228,9 @@ function submit() {
 .dwWords { display:flex; flex-wrap:wrap; gap:10px; }
 
 .dwWord {
-  border: 1px solid var(--color-border);
+  border: 0;
   background: var(--color-surface);
-  border-radius: 999px;
+  border-radius: 0;
   padding: 8px 12px;
   cursor: grab;
   user-select: none;
