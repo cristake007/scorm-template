@@ -69,7 +69,7 @@
           <transition name="lesson-expand">
             <div v-if="isLessonOpen(lesson.lessonId)" class="navChapterGroup">
               <v-btn
-                v-for="(chapter, idx) in lesson.chapters"
+                v-for="chapter in lesson.chapters"
                 :key="chapter.route"
                 :to="chapter.route"
                 variant="text"
@@ -81,7 +81,7 @@
               >
                 <div class="navRow__inner">
                   <div class="navRow__left">
-                    <span class="navRow__index">{{ idx + 1 }}</span>
+                    <span class="navRow__index">{{ chapterDisplayIndex(chapter.route) }}</span>
                     <div class="navRow__text">
                       <div class="navRow__title" :class="{ 'navRow__title--bold': route.path === chapter.route }">
                         {{ chapter.title }}
@@ -168,6 +168,13 @@ watch(
 
 const overviewRoute = computed(() => runtime.course.system?.fallbackRoute || runtime.course.system?.routes?.[0]?.route || "/");
 const chapterRouteOrder = computed(() => runtime.course.lessons.flatMap((lesson) => lesson.chapters.map((chapter) => chapter.route)));
+const chapterIndexByRoute = computed(() => {
+  const indexMap = new Map<string, number>();
+  chapterRouteOrder.value.forEach((chapterRoute, idx) => {
+    indexMap.set(chapterRoute, idx + 1);
+  });
+  return indexMap;
+});
 
 const currentChapterIndex = computed(() => chapterRouteOrder.value.findIndex((r) => r === route.path));
 const prevRoute = computed(() => (currentChapterIndex.value > 0 ? chapterRouteOrder.value[currentChapterIndex.value - 1] : ""));
@@ -194,6 +201,7 @@ let scrollRaf = 0;
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 const isLessonOpen = (id: string) => openLessons.value.has(id);
+const chapterDisplayIndex = (chapterRoute: string) => chapterIndexByRoute.value.get(chapterRoute) ?? 0;
 
 function toggleLesson(id: string) {
   const next = new Set(openLessons.value);
