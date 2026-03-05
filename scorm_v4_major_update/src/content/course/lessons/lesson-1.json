@@ -1,0 +1,218 @@
+{
+  "id": "lesson-1",
+  "title": "Lesson 1 (Free)",
+  "chapters": [
+    {
+      "id": "ch-1",
+      "title": "Intro (Quizzes + basics)",
+      "route": "/lesson-1/intro",
+      "required": true,
+      "completion": {
+        "mode": "quiz"
+      },
+      "page": {
+        "layout": {
+          "maxWidth": "xl",
+          "gap": "lg"
+        },
+        "blocks": [
+          {
+            "type": "text",
+            "variant": "h1",
+            "text": "Lesson 1 — Intro"
+          },
+          {
+            "type": "text",
+            "variant": "muted",
+            "text": "Complete the quiz to unlock Lesson 2."
+          },
+          {
+            "type": "layout.grid",
+            "id": "l1-grid-hero",
+            "columns": {
+              "sm": 1,
+              "md": 2,
+              "lg": 3
+            },
+            "gap": "lg",
+            "items": [
+              {
+                "id": "l1-cell-hero",
+                "span": 2,
+                "blocks": [
+                  {
+                    "type": "text",
+                    "variant": "h2",
+                    "text": "Hero (span=2)"
+                  },
+                  {
+                    "type": "text",
+                    "variant": "muted",
+                    "text": "This is a wide cell. Put text, video, image, quiz… anything."
+                  },
+                  {
+                    "type": "video.youtube",
+                    "title": "Watch this first",
+                    "mode": "embed",
+                    "videoId": "dQw4w9WgXcQ",
+                    "start": 10,
+                    "privacyMode": true
+                  }
+                ]
+              },
+              {
+                "id": "l1-cell-img",
+                "blocks": [
+                  {
+                    "type": "text",
+                    "variant": "h2",
+                    "text": "Image card"
+                  },
+                  {
+                    "type": "image",
+                    "src": "./assets/images/diagram-1.png",
+                    "alt": "Process diagram",
+                    "ratio": "16/9",
+                    "rounded": "lg"
+                  },
+                  {
+                    "type": "text",
+                    "text": "Images should be local (relative paths)."
+                  }
+                ]
+              },
+              {
+                "id": "l1-cell-note",
+                "blocks": [
+                  {
+                    "type": "section",
+                    "id": "l1-sec",
+                    "title": "Key note",
+                    "variant": "card",
+                    "padding": "lg",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "variant": "muted",
+                        "text": "Sections can be nested inside grid cells."
+                      },
+                      {
+                        "type": "iconList",
+                        "id": "l1-icons",
+                        "items": [
+                          {
+                            "icon": "book",
+                            "label": "SCORM",
+                            "text": "Sharable Content Object Reference Model"
+                          },
+                          {
+                            "icon": "info",
+                            "label": "Bookmark",
+                            "text": "Stored in cmi.location (route)"
+                          },
+                          {
+                            "icon": "book",
+                            "label": "State",
+                            "text": "Stored as JSON in cmi.suspend_data"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "quiz.mcq",
+            "quizId": "lesson-1-intro-quiz",
+            "title": "Quick check",
+            "scoreMax": 100,
+            "passScore": 80,
+            "attemptsAllowed": 0,
+            "shuffleOptions": true,
+            "questions": [
+              {
+                "id": "q1",
+                "prompt": "SCORM 2004 API object name is…",
+                "options": [
+                  {
+                    "id": "a",
+                    "text": "API_1484_11"
+                  },
+                  {
+                    "id": "b",
+                    "text": "API_11"
+                  },
+                  {
+                    "id": "c",
+                    "text": "SCORM_API"
+                  }
+                ],
+                "correct": [
+                  "a"
+                ]
+              },
+              {
+                "id": "q2",
+                "prompt": "Where do we store our progress state JSON?",
+                "options": [
+                  {
+                    "id": "a",
+                    "text": "localStorage"
+                  },
+                  {
+                    "id": "b",
+                    "text": "cmi.suspend_data"
+                  },
+                  {
+                    "id": "c",
+                    "text": "cookies"
+                  }
+                ],
+                "correct": [
+                  "b"
+                ]
+              }
+            ],
+            "onSubmit": {
+              "markChapterComplete": true,
+              "commit": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "ch-2",
+      "title": "Optional (free in completion sense)",
+      "route": "/lesson-1/optional",
+      "required": false,
+      "completion": {
+        "mode": "viewed"
+      },
+      "page": {
+        "layout": {
+          "maxWidth": "xl",
+          "gap": "lg"
+        },
+        "blocks": [
+          {
+            "type": "text",
+            "variant": "h1",
+            "text": "Optional chapter"
+          },
+          {
+            "type": "text",
+            "variant": "muted",
+            "text": "Not required, does not block lesson completion."
+          },
+          {
+            "type": "scroll.sentinel",
+            "text": "Bottom reached ✅"
+          }
+        ]
+      }
+    }
+  ]
+}
