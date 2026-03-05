@@ -42,6 +42,7 @@ scripts/
   validate-content.mjs         # content integrity validation gate
   scaffold-lesson.mjs          # creates lesson boilerplate
   scaffold-chapter.mjs         # adds chapter boilerplate to lesson
+  scaffold-block.mjs           # appends block templates (incl. quiz blocks) to chapter
 ```
 
 ## Professionalization Rules
@@ -51,3 +52,14 @@ scripts/
 3. **UI and content are separated**: style changes happen in `styles/*.css` without editing Vue templates.
 4. **SCORM is centralized**: LMS calls flow through runtime/progress services.
 5. **Accessibility baseline**: include skip link, clear focus rings, keyboard-safe dialogs, and first-run guided onboarding.
+
+
+## Human-friendly block names
+
+To improve author ergonomics, quiz block aliases are supported and normalized:
+- `quiz.multipleChoice` -> `quiz.mcq`
+- `quiz.cloze` -> `quiz.clozeSelect`
+- `quiz.matching` -> `quiz.match`
+- `quiz.drag-and-drop` -> `quiz.dragWords`
+
+This works both in content files and in CLI block scaffolding.

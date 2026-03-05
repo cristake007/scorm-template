@@ -12,16 +12,34 @@ This creates `src/content/course/lessons/lesson-4.json`.
 ## 2) Register lesson order
 Open `src/content/course/meta.json` and append your lesson id to `lessonOrder`.
 
-## 3) Add chapter content only
-Either edit the generated chapter or scaffold another one:
+## 3) Add chapters quickly
+Use chapter scaffolding:
 
 ```bash
 npm run chapter:new -- lesson-4 ch-2
 ```
 
-Then edit `page.blocks` and reuse existing block types.
+## 4) Add blocks quickly (including quiz blocks)
+Append block templates to a specific chapter:
 
-## 4) Configure completion
+```bash
+npm run block:add -- lesson-4 ch-2 text
+npm run block:add -- lesson-4 ch-2 quiz.multipleChoice
+npm run block:add -- lesson-4 ch-2 quiz.cloze
+npm run block:add -- lesson-4 ch-2 quiz.matching
+npm run block:add -- lesson-4 ch-2 quiz.drag-and-drop
+```
+
+Supported block templates:
+- `text`
+- `image`
+- `accordion`
+- `quiz.mcq` / `quiz.multipleChoice`
+- `quiz.clozeSelect` / `quiz.cloze`
+- `quiz.match` / `quiz.matching`
+- `quiz.dragWords` / `quiz.drag-and-drop`
+
+## 5) Configure completion
 Set per chapter completion mode:
 - `manual`
 - `viewed`
@@ -30,7 +48,7 @@ Set per chapter completion mode:
 
 `PageView` + `progressStore.reconcileCourseState()` handle completion updates.
 
-## 5) Validate and build
+## 6) Validate and build
 Run:
 
 ```bash
@@ -38,7 +56,7 @@ npm run validate:content
 npm run build
 ```
 
-## 6) LMS smoke test
+## 7) LMS smoke test
 - Launch in LMS (SCORM 2004 3rd Edition)
 - Complete a chapter in new lesson
 - Refresh

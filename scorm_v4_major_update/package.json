@@ -9,7 +9,8 @@
     "zip": "npm run build && node ./zip.mjs",
     "validate:content": "node ./scripts/validate-content.mjs",
     "lesson:new": "node ./scripts/scaffold-lesson.mjs",
-    "chapter:new": "node ./scripts/scaffold-chapter.mjs"
+    "chapter:new": "node ./scripts/scaffold-chapter.mjs",
+    "block:add": "node ./scripts/scaffold-block.mjs"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",

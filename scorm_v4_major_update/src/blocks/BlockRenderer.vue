@@ -46,12 +46,16 @@ const ctx = inject(RuntimeStoreKey);
 const Comp = computed(() => {
   switch (props.block.type) {
     case "quiz.mcq":
+    case "quiz.multipleChoice":
       return QuizMcqBlock;
     case "quiz.clozeSelect":
+    case "quiz.cloze":
       return QuizClozeSelectBlock;
     case "quiz.match":
+    case "quiz.matching":
       return QuizMatchBlock;
     case "quiz.dragWords":
+    case "quiz.drag-and-drop":
       return QuizDragWordsBlock;
 
     case "audio":
