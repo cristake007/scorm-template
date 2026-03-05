@@ -8,10 +8,11 @@ import { aliases, mdi } from "vuetify/iconsets/mdi";
 
 import App from "./App.vue";
 
-import { loadCourse } from "./engine/course/courseLoader";
-import { buildRoutes } from "./engine/router/routes";
+import { installRuntimeStore } from "./core/runtime/runtimeStore";
 import { AppContextKey } from "./engine/appContext";
+import { loadCourse } from "./engine/course/courseLoader";
 import { saveProgress } from "./engine/progress/progressStore";
+import { buildRoutes } from "./engine/router/routes";
 import { useScormRuntime } from "./scorm/useScormRuntime";
 
 import "./styles/master.css";
@@ -49,6 +50,7 @@ async function boot() {
   });
 
   const app = createApp(Root).use(router).use(vuetify);
+  installRuntimeStore(app, runtime);
 
   app.mount("#app");
 
