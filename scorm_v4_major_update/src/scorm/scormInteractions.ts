@@ -1,20 +1,18 @@
-// scorm_v4/src/scorm/scormInteractions.ts
 import type { ScormClient } from "./scormClient";
 
 export type InteractionType = "choice" | "matching" | "fill-in" | "other";
 
+type InteractionResult = "correct" | "incorrect" | "neutral" | "unanticipated";
 
 export function safeResponseString(responses: Record<string, string | string[]>) {
-  // key=a|b;key2=c
   const parts: string[] = [];
   for (const [k, v] of Object.entries(responses)) {
     const val = Array.isArray(v) ? v.join("|") : String(v ?? "");
-    // strip risky characters
     const cleanK = k.replace(/[;=\r\n]/g, "");
     const cleanV = val.replace(/[;=\r\n]/g, "");
     parts.push(`${cleanK}=${cleanV}`);
   }
-  // prevent huge strings
+
   return parts.join(";").slice(0, 1000);
 }
 
@@ -28,12 +26,11 @@ function cleanText(s: unknown, max = 250) {
 
 export function recordInteraction(params: {
   scorm: ScormClient;
-  interactionId: string; // stable, use quizId or quizId:key
+  interactionId: string;
   type: InteractionType;
-  learnerResponse?: string; // we still write a string
-  result: "correct" | "incorrect" | "neutral" | "unanticipated";
-  description?: string;     // <-- NEW (human readable)
-  correctResponse?: string; // keep optional/disabled for now
+  learnerResponse?: string;
+  result: InteractionResult;
+  description?: string;
 }) {
   const { scorm, interactionId, type, learnerResponse, result, description } = params;
   if (!scorm.initialized) return;
@@ -51,13 +48,10 @@ export function recordInteraction(params: {
   if (idx === -1) idx = count;
 
   scorm.set(`cmi.interactions.${idx}.id`, cleanText(interactionId, 120));
-  scorm.set(`cmi.interactions.${idx}.type`, cleanText(type ?? "other", 30));
-  scorm.set(`cmi.interactions.${idx}.result`, cleanText(result ?? "neutral", 30));
-
-  // IMPORTANT: never allow NULL -> always a string
+  scorm.set(`cmi.interactions.${idx}.type`, cleanText(type, 30));
+  scorm.set(`cmi.interactions.${idx}.result`, cleanText(result, 30));
   scorm.set(`cmi.interactions.${idx}.learner_response`, cleanText(learnerResponse, 250));
 
-  // Human readable label for ILIAS reports
   if (description != null) {
     scorm.set(`cmi.interactions.${idx}.description`, cleanText(description, 250));
   }

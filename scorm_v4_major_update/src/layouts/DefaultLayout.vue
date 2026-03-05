@@ -1,5 +1,5 @@
 <template>
-  <DefaultLayout
+  <AppShell
     :course-title="courseTitle"
     :course-version="courseVersion"
     :nav="nav"
@@ -9,14 +9,14 @@
 </template>
 
 <script setup lang="ts">
-import DefaultLayout from "./layouts/DefaultLayout.vue";
-import logoUrl from "./assets/images/logo.svg";
-import type { NavLesson } from "./engine/navigation/navModel";
+import AppShell from "../app/AppShell.vue";
+import type { NavLesson } from "../engine/navigation/navModel";
 
 defineProps<{
   courseTitle: string;
   courseVersion: string;
   nav: NavLesson[];
   lockedMessage: string;
+  logoUrl?: string;
 }>();
 </script>

@@ -5,7 +5,13 @@ import type { ScormClient } from "../../scorm/scormClient";
 import type { ProgressStateV1 } from "../progress/progressStore";
 import { saveProgress } from "../progress/progressStore";
 
-import { isChapterUnlocked, highestUnlockedLessonId, firstChapterRouteForLesson } from "../progress/unlockRules";
+import {
+  isChapterUnlocked,
+  highestUnlockedLessonId,
+  firstChapterRouteForLesson,
+  nearestAvailableChapterRouteForLesson,
+  isLessonUnlocked
+} from "../progress/unlockRules";
 
 export function installCourseGuards(opts: {
   router: Router;
@@ -62,12 +68,13 @@ export function installCourseGuards(opts: {
       const unlocked = isChapterUnlocked(course, state, lessonId, chapterId);
 
       if (!unlocked) {
-        const highest = highestUnlockedLessonId(course, state);
-        const redirectTo = firstChapterRouteForLesson(course, highest);
+        const lessonUnlocked = isLessonUnlocked(course, state, lessonId);
+        const redirectTo = lessonUnlocked
+          ? nearestAvailableChapterRouteForLesson(course, state, lessonId, chapterId)
+          : firstChapterRouteForLesson(course, highestUnlockedLessonId(course, state));
 
-        onLockedRedirect?.("Complete previous lesson to unlock this.");
+        onLockedRedirect?.("Complete prerequisite chapter(s) to unlock this section.");
 
-        // Prevent accidental redirect loops
         if (to.fullPath === redirectTo) return true;
         return redirectTo;
       }
