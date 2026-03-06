@@ -1,6 +1,5 @@
 <template>
   <v-app id="app-shell">
-    <a class="skipLink" href="#mainContent">Skip to course content</a>
     <v-layout class="appLayout" :class="{ drawerClosed: !drawerOpen }">
       <v-app-bar id="app-shell-topbar" color="surface" :elevation="2" density="comfortable" :height="70">
         <template #prepend>
