@@ -40,27 +40,3 @@ defineProps<{
 }>();
 </script>
 
-<style scoped>
-.iconList__title { font-weight: 700; margin-bottom: 8px; font-size: 16px; }
-.iconList__items { display: grid; gap: 10px; }
-
-.iconList__row {
-  display: grid;
-  grid-template-columns: 34px 1fr;
-  gap: 10px;
-  align-items: center;
-}
-
-.iconList__icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 0;
-  border: 0;
-  display: grid;
-  place-items: center;
-  font-size: 14px;
-}
-
-.iconList__label { font-weight: 700; }
-.iconList__sep { margin: 0 6px; }
-</style>

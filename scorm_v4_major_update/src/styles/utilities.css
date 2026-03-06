@@ -1,0 +1,15 @@
+.no-select { user-select: none; }
+
+.finishCourseWrap__hint,
+.finishCourseWrap__error {
+  font-size: var(--font-size-caption);
+}
+
+.finishCourseWrap__error {
+  color: var(--color-danger);
+}
+
+.pageView__subtitle {
+  margin-bottom: 14px;
+  font-size: 17px;
+}

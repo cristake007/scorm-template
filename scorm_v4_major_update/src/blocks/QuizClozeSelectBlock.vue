@@ -1,12 +1,12 @@
 <template>
   <div class="scorm-card">
-    <div v-if="title" class="scorm-h1" style="font-size:16px">{{ title }}</div>
+    <div v-if="title" class="scorm-h1 scorm-title-sm">{{ title }}</div>
 
-    <div style="line-height:1.8; font-size:16px; margin-top:10px;">
+    <div class="clozeBlock__text">
       <template v-for="(part, i) in text" :key="i">
         <span v-if="isText(part)">{{ part.t }}</span>
 
-        <span v-else style="display:inline-block; margin:0 6px;">
+        <span v-else class="clozeBlock__blank">
           <select class="scorm-select" :disabled="locked" v-model="responses[part.blankId]">
             <option value="" disabled>Select…</option>
             <option v-for="opt in part.options" :key="opt.id" :value="opt.id">
@@ -17,19 +17,19 @@
       </template>
     </div>
 
-    <div style="display:flex;gap:10px;margin-top:16px;align-items:center;">
+    <div class="scorm-stack quizBlock__result">
       <v-btn :disabled="locked || !canSubmit" @click="submit">Submit</v-btn>
 
       <div v-if="locked && existing" class="scorm-muted">
         Score: {{ existing.lastRaw }} / {{ existing.max }} —
-        <span :style="{ color: existing.passed ? 'var(--quiz-pass)' : 'var(--quiz-fail)', fontWeight: 700 }">
+        <span :class="existing.passed ? 'scorm-score--pass' : 'scorm-score--fail'">
           {{ existing.passed ? "Passed" : "Failed" }}
         </span>
       </div>
 
       <div v-else-if="submitted" class="scorm-muted">
         Score: {{ lastScore }} / {{ scoreMax }} —
-        <span :style="{ color: lastScore >= passScore ? 'var(--quiz-pass)' : 'var(--quiz-fail)', fontWeight: 700 }">
+        <span :class="lastScore >= passScore ? 'scorm-score--pass' : 'scorm-score--fail'">
           {{ lastScore >= passScore ? "Passed" : "Failed" }}
         </span>
       </div>
@@ -132,11 +132,3 @@ function submit() {
 }
 </script>
 
-<style>
-.scorm-select {
-  padding: 8px 10px;
-  border-radius: 0;
-  border: 0;
-  background: var(--color-surface);
-}
-</style>

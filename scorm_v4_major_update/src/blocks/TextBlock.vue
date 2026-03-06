@@ -1,6 +1,6 @@
 <template>
   <div class="scorm-card">
-    <div :class="cls" style="white-space: pre-wrap">{{ text }}</div>
+    <div :class="cls" class="textBlock__content">{{ text }}</div>
   </div>
 </template>
 

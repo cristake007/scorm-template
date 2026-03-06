@@ -13,11 +13,7 @@ import { loadCourse } from "./engine/course/courseLoader";
 import { buildRoutes } from "./engine/router/routes";
 import { useScormRuntime } from "./scorm/useScormRuntime";
 
-import "./styles/variables.css";
-import "./styles/base.css";
-import "./styles/AppShell.css";
-import "./styles/components.css";
-import "./styles/page.css";
+import "./styles/master.css";
 
 const vuetify = createVuetify({
   icons: { defaultSet: "mdi", aliases, sets: { mdi } }

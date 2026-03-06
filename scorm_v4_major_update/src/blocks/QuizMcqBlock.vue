@@ -1,9 +1,9 @@
 <template>
   <div class="scorm-card">
-    <div v-if="title" class="scorm-h1" style="font-size:16px">{{ title }}</div>
+    <div v-if="title" class="scorm-h1 scorm-title-sm">{{ title }}</div>
 
-    <div v-for="q in questions" :key="q.id" style="margin-top:14px">
-      <div style="font-weight:600;margin-bottom:8px">{{ q.prompt }}</div>
+    <div v-for="q in questions" :key="q.id" class="quizBlock__question">
+      <div class="quizBlock__prompt">{{ q.prompt }}</div>
 
       <v-radio-group v-if="!q.multi" v-model="answers[q.id]" :disabled="locked">
         <v-radio v-for="opt in q.options" :key="opt.id" :label="opt.text" :value="opt.id" />
@@ -22,13 +22,13 @@
       </div>
     </div>
 
-    <div style="display:flex;gap:10px;margin-top:16px;align-items:center;">
+    <div class="scorm-stack quizBlock__result">
       <v-btn :disabled="locked || !canSubmit" @click="submit">Submit</v-btn>
 
       <!-- If already completed (after refresh), show stored result -->
       <div v-if="locked && existing" class="scorm-muted">
         Score: {{ existing.lastRaw }} / {{ existing.max }} —
-        <span :style="{ color: existing.passed ? 'var(--quiz-pass)' : 'var(--quiz-fail)', fontWeight: 700 }">
+        <span :class="existing.passed ? 'scorm-score--pass' : 'scorm-score--fail'">
           {{ existing.passed ? "Passed" : "Failed" }}
         </span>
       </div>
@@ -36,7 +36,7 @@
       <!-- Otherwise show the result from this session -->
       <div v-else-if="submitted" class="scorm-muted">
         Score: {{ lastScore }} / {{ scoreMax }} —
-        <span :style="{ color: lastScore >= passScore ? 'var(--quiz-pass)' : 'var(--quiz-fail)', fontWeight: 700 }">
+        <span :class="lastScore >= passScore ? 'scorm-score--pass' : 'scorm-score--fail'">
           {{ lastScore >= passScore ? "Passed" : "Failed" }}
         </span>
       </div>
