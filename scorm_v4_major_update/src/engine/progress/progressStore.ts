@@ -1,7 +1,6 @@
 // src/engine/progress/progressStore.ts
 import type { ScormClient } from "../../scorm/scormClient";
 import type { CourseModel } from "../course/courseLoader";
-import { writeCourseObjective } from "../../scorm/scormReporting";
 
 export type ScoreEntry = {
   attempts: number;
@@ -200,48 +199,4 @@ export function recordQuizAttempt(params: {
   existing.passed = existing.passed || passed;
   existing.lastAttemptAt = nowIso();
   if (responses) existing.lastResponses = responses;
-}
-
-export function reconcileCourseState(params: {
-  course: CourseModel;
-  state: ProgressStateV1;
-  scorm: ScormClient;
-  touchedLessonId?: string;
-}) {
-  const { course, state, scorm, touchedLessonId } = params;
-
-  // Lesson is complete if all of its chapters are complete.
-  const lessonIds = touchedLessonId ? [touchedLessonId] : course.lessons.map((l) => l.id);
-  for (const lessonId of lessonIds) {
-    const lesson = course.lessons.find((l) => l.id === lessonId);
-    if (!lesson) continue;
-
-    const requiredChapters = lesson.chapters.filter((ch) => ch.required ?? true);
-    const done =
-      requiredChapters.length === 0 ||
-      requiredChapters.every((ch) => state.completedChapters.includes(chapterKey(lessonId, ch.id)));
-
-    if (done) markLessonComplete(state, lessonId);
-  }
-
-  const totalLessons = Math.max(1, course.lessons.length);
-  const completedLessons = state.completedLessons.length;
-  const progressMeasure01 = Math.max(0, Math.min(1, completedLessons / totalLessons));
-
-  const completionStatus = completedLessons >= totalLessons ? "completed" : "incomplete";
-
-  scorm.setCompletion({ completionStatus });
-  scorm.set("cmi.progress_measure", progressMeasure01.toFixed(4));
-
-  const currentSuccessStatus = scorm.get("cmi.success_status");
-  const successStatus =
-    currentSuccessStatus === "passed" || currentSuccessStatus === "failed" ? currentSuccessStatus : "unknown";
-
-  writeCourseObjective({
-    scorm,
-    objectiveId: course.course.id,
-    completionStatus,
-    successStatus,
-    progressMeasure01
-  });
 }
