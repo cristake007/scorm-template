@@ -46,7 +46,7 @@ export interface ScormClient {
   mode: "lms" | "offline";
 
   initialize(): boolean;
-  terminate(): boolean;
+  terminate(options?: { exit?: "normal" | "suspend" | "logout" | "time-out" }): boolean;
 
   get(key: string): string;
   set(key: string, value: string): boolean;
@@ -271,11 +271,12 @@ export function createScormClientStrict(options?: {
       return client.initialized;
     },
 
-    terminate(): boolean {
+    terminate(options?: { exit?: "normal" | "suspend" | "logout" | "time-out" }): boolean {
       if (!client.initialized) return true;
 
       try {
-        client.set("cmi.exit", "suspend");
+        const exitValue = options?.exit ?? "suspend";
+        client.set("cmi.exit", exitValue);
         const started = sessionStartedAtMs || Date.now();
         client.set("cmi.session_time", toScorm2004Duration(Date.now() - started));
         client.commit();

@@ -12,6 +12,7 @@ import {
   installScormExitHandlers,
   type ScormClient
 } from "./scormClient";
+import { writeCourseObjective } from "./scormReporting";
 
 type ScormRuntimeShape = {
   scorm: ScormClient;
@@ -102,11 +103,18 @@ export function useScormRuntime(course: CourseModel, router: Router): RuntimeSto
     scorm.set("cmi.score.min", "0");
     scorm.set("cmi.score.max", "100");
     scorm.set("cmi.session_time", toScormDuration(Date.now() - sessionStartMs));
-    scorm.set("cmi.exit", "normal");
+    writeCourseObjective({
+      scorm,
+      objectiveId: course.course.id,
+      completionStatus: "completed",
+      successStatus: "passed",
+      progressMeasure01: 1,
+      scoreScaled01: 1
+    });
 
     saveProgress(scorm, state);
     scorm.commit();
-    return scorm.terminate();
+    return scorm.terminate({ exit: "normal" });
   };
 
   const runtime: ScormRuntimeShape = { scorm, state, nav, lockedMessage, cleanup, finishCourse };
