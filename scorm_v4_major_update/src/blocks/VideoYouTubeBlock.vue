@@ -1,18 +1,18 @@
 <template>
   <div class="scorm-card">
-    <div v-if="title" class="scorm-h1" style="font-size:16px">{{ title }}</div>
+    <div v-if="title" class="scorm-h1 scorm-title-sm">{{ title }}</div>
 
     <!-- LINK MODE -->
     <template v-if="mode === 'link'">
-      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+      <div class="videoBlock__link">
         <img
           v-if="thumbnailUrl"
           :src="thumbnailUrl"
           alt=""
-          style="width:320px;max-width:100%;height:auto;border-radius:0;border:0"
+          class="videoBlock__thumb"
         />
-        <div style="min-width:220px;">
-          <div class="scorm-muted" style="margin-bottom:10px">
+        <div class="videoBlock__meta">
+          <div class="scorm-muted videoBlock__hint">
             Opens YouTube in a new tab.
           </div>
 
@@ -25,11 +25,11 @@
 
     <!-- EMBED MODE -->
     <template v-else>
-      <div style="position:relative;width:100%;padding-top:56.25%;border-radius:0;overflow:hidden;">
+      <div class="videoBlock__embed">
         <iframe
           :src="finalSrc"
           title="YouTube video player"
-          style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"
+          class="videoBlock__frame"
           loading="lazy"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           referrerpolicy="strict-origin-when-cross-origin"

@@ -1,11 +1,11 @@
 <template>
   <div class="scorm-card">
-    <div v-if="title" class="scorm-h1" style="font-size:16px">{{ title }}</div>
+    <div v-if="title" class="scorm-h1 scorm-title-sm">{{ title }}</div>
 
     <div class="matchGrid">
       <!-- Left -->
       <div>
-        <div class="scorm-muted" style="margin-bottom:8px">Drag these:</div>
+        <div class="scorm-muted matchBlock__label">Drag these:</div>
         <div
           v-for="l in leftItems"
           :key="l.leftId"
@@ -13,7 +13,7 @@
           draggable="true"
           :aria-disabled="locked"
           @dragstart="onDragStart($event, l.leftId)"
-          :style="{ opacity: locked ? 0.6 : 1 }"
+          :class="{ 'is-disabled': locked }"
         >
           {{ l.left }}
         </div>
@@ -21,7 +21,7 @@
 
       <!-- Right drop targets -->
       <div>
-        <div class="scorm-muted" style="margin-bottom:8px">Drop onto:</div>
+        <div class="scorm-muted matchBlock__label">Drop onto:</div>
         <div
           v-for="r in rightItems"
           :key="r.rightId"
@@ -40,19 +40,19 @@
       </div>
     </div>
 
-    <div style="display:flex;gap:10px;margin-top:16px;align-items:center;">
+    <div class="scorm-stack quizBlock__result">
       <v-btn :disabled="locked || !canSubmit" @click="submit">Submit</v-btn>
 
       <div v-if="locked && existing" class="scorm-muted">
         Score: {{ existing.lastRaw }} / {{ existing.max }} —
-        <span :style="{ color: existing.passed ? 'var(--quiz-pass)' : 'var(--quiz-fail)', fontWeight: 700 }">
+        <span :class="existing.passed ? 'scorm-score--pass' : 'scorm-score--fail'">
           {{ existing.passed ? "Passed" : "Failed" }}
         </span>
       </div>
 
       <div v-else-if="submitted" class="scorm-muted">
         Score: {{ lastScore }} / {{ scoreMax }} —
-        <span :style="{ color: lastScore >= passScore ? 'var(--quiz-pass)' : 'var(--quiz-fail)', fontWeight: 700 }">
+        <span :class="lastScore >= passScore ? 'scorm-score--pass' : 'scorm-score--fail'">
           {{ lastScore >= passScore ? "Passed" : "Failed" }}
         </span>
       </div>
@@ -177,38 +177,3 @@ function submit() {
 }
 </script>
 
-<style>
-.matchGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-top: 12px;
-}
-
-.matchItem {
-  border: 0;
-  border-radius: 0;
-  padding: 10px 12px;
-  background: var(--color-surface);
-  margin-bottom: 10px;
-  cursor: grab;
-}
-
-.matchTarget {
-  border: 0;
-  border-radius: 0;
-  padding: 10px 12px;
-  background: #00000005;
-  margin-bottom: 10px;
-  min-height: 62px;
-}
-
-.targetTitle {
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.targetValue {
-  min-height: 20px;
-}
-</style>

@@ -1,14 +1,14 @@
 <template>
   <div class="scorm-card">
-    <div v-if="title" class="scorm-h1" style="font-size:16px">{{ title }}</div>
+    <div v-if="title" class="scorm-h1 scorm-title-sm">{{ title }}</div>
 
-    <div class="scorm-media" style="padding:12px">
-      <audio controls preload="metadata" style="width:100%" :src="src">
+    <div class="scorm-media audioBlock__media">
+      <audio controls preload="metadata" class="audioBlock__player" :src="src">
         Your browser does not support audio playback.
       </audio>
     </div>
 
-    <div v-if="caption" class="scorm-muted" style="margin-top:10px">{{ caption }}</div>
+    <div v-if="caption" class="scorm-muted audioBlock__caption">{{ caption }}</div>
   </div>
 </template>
 

@@ -1,7 +1,87 @@
-:root{
-  --color-surface: #ffffff;
-  --color-border: rgba(0,0,0,.12);
-  --color-primary: #1976d2; /* Vuetify default-ish */
-  --app-bg: #f6f7fb;
-  --text-muted: rgba(0,0,0,.65);
+:root {
+  /* Colors */
+  --color-brand-500: #0c4ea3;
+  --color-brand-600: #0059b3;
+  --color-brand-700: #00428a;
+  --color-brand-100: #e9f2ff;
+
+  --color-surface-base: #ffffff;
+  --color-surface-muted: #f7f9fc;
+  --color-bg-page: #f2f5fa;
+  --color-border-subtle: rgba(15, 23, 42, 0.12);
+  --color-border-strong: rgba(15, 23, 42, 0.2);
+
+  --color-text-default: #0f172a;
+  --color-text-muted: #5b6472;
+  --color-text-inverse: #ffffff;
+
+  --color-success: #2e7d32;
+  --color-danger: #c62828;
+
+  /* Typography */
+  --font-family-base: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-size-body: 16px;
+  --font-size-caption: 13px;
+  --font-size-title-sm: 16px;
+  --font-size-title-md: 18px;
+  --font-size-title-lg: 28px;
+  --line-height-body: 1.5;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+
+  /* Radius */
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 8px 28px rgba(15, 23, 42, 0.1);
+  --shadow-float: 0 6px 16px rgba(0, 0, 0, 0.2);
+
+  /* Transitions */
+  --transition-fast: 120ms ease;
+  --transition-base: 180ms ease;
+  --transition-slow: 260ms ease;
+
+  /* Z-index */
+  --z-shell-scroll: 1200;
+  --z-shell-pager: 9000;
+  --z-drawer-resizer: 9999;
+  --z-skip-link: 10000;
+
+  /* Sizing and constraints */
+  --shell-topbar-height: 80px;
+  --shell-drawer-width: 360px;
+  --shell-nav-title-size: 15px;
+  --page-max: 1100px;
+  --page-max-wide: 1320px;
+  --page-pad: 24px;
+  --card-pad: 18px;
+
+  --button-radius: 10px;
+  --button-padding-inline: 14px;
+  --button-padding-block: 8px;
+
+  --focus-ring: 2px solid var(--color-brand-600);
+
+  /* Backward-compatible aliases */
+  --color-primary: var(--color-brand-600);
+  --color-primary-strong: var(--color-brand-700);
+  --color-primary-soft: var(--color-brand-100);
+  --color-bg: var(--color-bg-page);
+  --color-surface: var(--color-surface-base);
+  --color-border: var(--color-border-subtle);
+  --text-default: var(--color-text-default);
+  --text-muted: var(--color-text-muted);
+  --card-radius: var(--radius-md);
+  --quiz-pass: var(--color-success);
+  --quiz-fail: var(--color-danger);
 }

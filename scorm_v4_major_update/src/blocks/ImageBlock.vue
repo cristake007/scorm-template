@@ -3,7 +3,7 @@
     <img
       :src="src"
       :alt="alt || ''"
-      style="max-width: 100%; height: auto; border-radius: 0; display: block;"
+      class="imageBlock__media"
     />
   </div>
 </template>

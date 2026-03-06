@@ -1,0 +1,86 @@
+.appLayout {
+  height: 100vh;
+}
+
+.v-main {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  height: calc(100vh - var(--shell-topbar-height));
+}
+
+.v-main__wrap {
+  display: flex;
+  justify-content: center;
+  min-height: 100%;
+}
+
+.navDrawer {
+  position: relative;
+  overflow: visible;
+  background: var(--color-surface-base);
+  border-right: 1px solid var(--color-border-subtle);
+  height: calc(100vh - var(--shell-topbar-height)) !important;
+  transition: box-shadow var(--transition-base), width var(--transition-base);
+}
+
+.navDrawer .v-navigation-drawer__content {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-2) 0;
+}
+
+.drawerClosed .scorm-page {
+  max-width: var(--page-max-wide);
+}
+
+.scorm-page {
+  width: 100%;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: var(--page-pad);
+}
+
+.pageRoot {
+  display: block;
+}
+
+.pageBlocks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.scorm-block {
+  transition: box-shadow var(--transition-base), border-color var(--transition-base);
+  scroll-margin-top: calc(var(--shell-topbar-height) + var(--space-4));
+}
+
+.manualCompleteWrap {
+  margin-top: var(--space-5);
+}
+
+.finishCourseWrap {
+  margin-top: var(--space-7);
+  padding: var(--card-pad);
+  display: grid;
+  gap: var(--space-2);
+  background: linear-gradient(180deg, #f9fbff 0%, #ffffff 100%);
+}
+
+.chapterPager {
+  position: fixed;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  display: flex;
+  gap: var(--space-3);
+  z-index: var(--z-shell-pager);
+}
+
+.chapterPager__btn {
+  box-shadow: var(--shadow-float);
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+}

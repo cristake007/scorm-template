@@ -1,9 +1,9 @@
 <template>
   <div class="scorm-card">
-    <div v-if="title" class="scorm-h1" style="font-size:16px">{{ title }}</div>
+    <div v-if="title" class="scorm-h1 scorm-title-sm">{{ title }}</div>
 
     <!-- Sentence with blanks -->
-    <div class="dwText" style="margin-top:10px">
+    <div class="dragWordsBlock__text">
       <template v-for="(p, i) in parts" :key="i">
         <span v-if="p.t">{{ p.t }}</span>
 
@@ -25,14 +25,14 @@
     </div>
 
     <!-- Bank -->
-    <div class="dwBank" style="margin-top:14px">
-      <div class="scorm-muted" style="margin-bottom:8px">Drag these words:</div>
+    <div class="dragWordsBlock__bank">
+      <div class="scorm-muted dragWordsBlock__bankLabel">Drag these words:</div>
 
-      <div class="dwWords">
+      <div class="dragWordsBlock__words">
         <div
           v-for="w in words"
           :key="w.id"
-          class="dwWord"
+          class="dragWordsBlock__word"
           draggable="true"
           :aria-disabled="locked || isUsed(w.id)"
           :style="{ opacity: locked || isUsed(w.id) ? 0.5 : 1 }"
@@ -43,19 +43,19 @@
       </div>
     </div>
 
-    <div style="display:flex;gap:10px;margin-top:16px;align-items:center;">
+    <div class="scorm-stack quizBlock__result">
       <v-btn :disabled="locked || !canSubmit" @click="submit">Submit</v-btn>
 
       <div v-if="locked && existing" class="scorm-muted">
         Score: {{ existing.lastRaw }} / {{ existing.max }} —
-        <span :style="{ color: existing.passed ? 'var(--quiz-pass)' : 'var(--quiz-fail)', fontWeight: 700 }">
+        <span :class="existing.passed ? 'scorm-score--pass' : 'scorm-score--fail'">
           {{ existing.passed ? "Passed" : "Failed" }}
         </span>
       </div>
 
       <div v-else-if="submitted" class="scorm-muted">
         Score: {{ lastScore }} / {{ scoreMax }} —
-        <span :style="{ color: lastScore >= passScore ? 'var(--quiz-pass)' : 'var(--quiz-fail)', fontWeight: 700 }">
+        <span :class="lastScore >= passScore ? 'scorm-score--pass' : 'scorm-score--fail'">
           {{ lastScore >= passScore ? "Passed" : "Failed" }}
         </span>
       </div>
@@ -185,54 +185,3 @@ function submit() {
 }
 </script>
 
-<style scoped>
-.dwText { line-height: 1.8; font-size: 16px; }
-
-.dwBlank {
-  display: inline-block;
-  min-width: 86px;
-  padding: 2px 6px;
-  margin: 0 6px;
-  border-radius: 0;
-  border: 0;
-  background: #00000005;
-  vertical-align: baseline;
-}
-
-.dwBlank.filled {
-  border-style: solid;
-  background: var(--color-surface);
-}
-
-.dwHint { color: rgba(0,0,0,0.55); }
-
-.dwChip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 0;
-  background: var(--color-surface);
-  border-radius: 0;
-  padding: 2px 8px;
-}
-
-.dwX {
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  font-size: 18px;
-  line-height: 1;
-  padding: 0 2px;
-}
-
-.dwWords { display:flex; flex-wrap:wrap; gap:10px; }
-
-.dwWord {
-  border: 0;
-  background: var(--color-surface);
-  border-radius: 0;
-  padding: 8px 12px;
-  cursor: grab;
-  user-select: none;
-}
-</style>

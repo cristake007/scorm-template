@@ -6,17 +6,17 @@
     tabindex="0"
     @keydown.enter.prevent="toggle"
   >
-    <div v-if="title" class="scorm-h2" style="margin-bottom: 10px">{{ title }}</div>
+    <div v-if="title" class="scorm-h2 flipCardBlock__title">{{ title }}</div>
 
     <div class="flipCard" :class="{ flipped }" aria-live="polite">
       <div class="flipFace flipFront">
-        <div class="scorm-body" style="white-space: pre-wrap">{{ front }}</div>
-        <div class="scorm-muted" style="margin-top: 10px">Click to flip</div>
+        <div class="scorm-body scorm-prewrap">{{ front }}</div>
+        <div class="scorm-muted flipCard__hint">Click to flip</div>
       </div>
 
       <div class="flipFace flipBack">
-        <div class="scorm-body" style="white-space: pre-wrap">{{ back }}</div>
-        <div class="scorm-muted" style="margin-top: 10px">Click to flip back</div>
+        <div class="scorm-body scorm-prewrap">{{ back }}</div>
+        <div class="scorm-muted flipCard__hint">Click to flip back</div>
       </div>
     </div>
   </div>
@@ -50,18 +50,3 @@ function toggle() {
 }
 </script>
 
-<style scoped>
-.flipWrap { cursor: pointer; }
-.flipCard { position: relative; perspective: 1000px; min-height: 120px; }
-.flipFace {
-  backface-visibility: hidden;
-  transition: transform 0.35s ease;
-  border-radius: 0;
-  padding: 14px;
-  border: 0;
-}
-.flipFront { transform: rotateY(0deg); }
-.flipBack { position: absolute; inset: 0; transform: rotateY(180deg); }
-.flipCard.flipped .flipFront { transform: rotateY(180deg); }
-.flipCard.flipped .flipBack { transform: rotateY(360deg); }
-</style>

@@ -1,6 +1,6 @@
 <template>
   <div class="scorm-card">
-    <div v-if="title" class="scorm-h2" style="margin-bottom:10px">{{ title }}</div>
+    <div v-if="title" class="scorm-h2 hotspotBlock__title">{{ title }}</div>
 
     <div ref="wrapEl" class="hotspotWrap">
       <img class="hotspotImg" :src="src" :alt="alt || ''" />
@@ -31,14 +31,14 @@
     </div>
 
     <!-- Panel mode -->
-    <div v-if="display === 'panel' && active" class="hotspotPanel" style="margin-top:12px">
-      <div class="scorm-h2" style="font-size:14px; margin-bottom:6px">
+    <div v-if="display === 'panel' && active" class="hotspotPanel">
+      <div class="scorm-h2 hotspotPanel__title">
         {{ active.label || "Hotspot" }}
       </div>
-      <div class="scorm-body" style="white-space:pre-wrap">{{ active.text }}</div>
+      <div class="scorm-body scorm-prewrap">{{ active.text }}</div>
     </div>
 
-    <div v-if="requireAllClicks" class="scorm-muted" style="margin-top:10px">
+    <div v-if="requireAllClicks" class="scorm-muted hotspotBlock__status">
       {{ clicked.size }} / {{ hotspots.length }} hotspots explored
     </div>
   </div>
@@ -184,79 +184,3 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<style scoped>
-.hotspotWrap {
-  position: relative;
-  width: 100%;
-  border-radius: 0;
-  overflow: hidden;
-  border: 0;
-}
-
-.hotspotImg {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.hotspot {
-  position: absolute;
-  background: transparent;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-}
-
-.hotspotDot {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 14px;
-  height: 14px;
-  border-radius: 0;
-  transform: translate(-50%, -50%);
-  border: 0;
-  background: rgba(255,255,255,0.85);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-}
-
-.hotspotDot.done {
-  border-color: var(--color-primary, #1976d2);
-  background: rgba(25, 118, 210, 0.15);
-}
-
-.hotspotPanel {
-  border: 0;
-  border-radius: 0;
-  padding: 12px;
-  background: #fff;
-}
-
-/* Tooltip */
-.tooltip {
-  position: absolute;
-  left: 50%;
-  top: -10px;
-  transform: translate(-50%, -100%);
-  min-width: 220px;
-  max-width: 320px;
-  padding: 10px 12px;
-  border-radius: 0;
-  border: 0;
-  background: #fff;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.18);
-  z-index: 10;
-  pointer-events: none; /* hover stays on hotspot; touch uses outside listener */
-}
-
-.tooltipTitle {
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.tooltipBody {
-  font-size: 14px;
-  line-height: 1.35;
-  white-space: pre-wrap;
-}
-</style>

@@ -1,19 +1,23 @@
-/* src/styles/base.css */
-*,
+* ,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
 html,
-body {
+body,
+#app {
   height: 100%;
-  overflow: hidden;
+}
+
+body {
   margin: 0;
-  background: var(--color-bg);
-  color: var(--text-default);
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  line-height: 1.4;
+  overflow: hidden;
+  background: radial-gradient(circle at top right, #ffffff 0%, #f3f7ff 48%, #eef2f8 100%);
+  color: var(--color-text-default);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
 }
 
 img {
@@ -22,7 +26,7 @@ img {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -32,7 +36,4 @@ img {
     animation: none !important;
     scroll-behavior: auto !important;
   }
-}
-#app {
-  height: 100%;
 }

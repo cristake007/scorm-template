@@ -1,6 +1,6 @@
 <template>
   <div class="scorm-card">
-    <div v-if="title" class="scorm-h2" style="margin-bottom: 10px">{{ title }}</div>
+    <div v-if="title" class="scorm-h2 accordionBlock__title">{{ title }}</div>
 
     <v-expansion-panels variant="accordion" multiple>
       <v-expansion-panel
@@ -12,7 +12,7 @@
           {{ it.title }}
         </v-expansion-panel-title>
         <v-expansion-panel-text>
-          <div class="scorm-body" style="white-space: pre-wrap">{{ it.body }}</div>
+          <div class="scorm-body scorm-prewrap">{{ it.body }}</div>
         </v-expansion-panel-text>
       </v-expansion-panel>
     </v-expansion-panels>
