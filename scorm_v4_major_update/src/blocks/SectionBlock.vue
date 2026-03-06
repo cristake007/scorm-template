@@ -64,28 +64,3 @@ defineEmits<{
   (e: "viewed-ids", ids: string[]): void;
 }>();
 </script>
-
-<style scoped>
-.scorm-section--card {
-  border: 0;
-  border-radius: 0;
-  background: #fff;
-}
-.scorm-section--plain {
-  border: 0;
-  background: transparent;
-}
-.scorm-section--pad-sm { padding: 10px; }
-.scorm-section--pad-md { padding: 14px; }
-.scorm-section--pad-lg { padding: 18px; }
-
-.scorm-section__title {
-  font-weight: 700;
-  font-size: 16px;
-  margin-bottom: 10px;
-}
-.scorm-section__body {
-  display: grid;
-  gap: 12px;
-}
-</style>

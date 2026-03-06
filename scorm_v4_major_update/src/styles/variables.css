@@ -27,6 +27,14 @@
   --space-5: 20px;
   --space-6: 24px;
 
+  --shell-topbar-height: 80px;
+  --shell-drawer-width: 360px;
+  --shell-nav-row-pad-y: 14px;
+  --shell-nav-row-pad-x: 18px;
+  --shell-nav-row-gap: 14px;
+  --shell-nav-row-title-size: 15px;
+  --shell-nav-divider-color: rgba(15, 23, 42, 0.1);
+
   --page-max: 1100px;
   --page-max-wide: 1320px;
   --page-pad: 24px;
