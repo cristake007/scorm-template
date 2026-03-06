@@ -371,7 +371,7 @@ function onQuizSubmitted(payload: {
       interactionId: payload.quizId,
       type: interactionType,
       learnerResponse: safeResponseString(payload.responses),
-      result: payload.raw >= payload.passScore ? "correct" : "wrong",
+      result: payload.raw >= payload.passScore ? "correct" : "incorrect",
       description
     });
   } catch {

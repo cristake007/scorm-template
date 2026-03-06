@@ -17,7 +17,7 @@ export function writeInteraction(params: {
   learnerResponse: string;
   correctResponse?: string;
   description?: string;
-  result: "correct" | "wrong" | "neutral";
+  result: "correct" | "incorrect" | "neutral";
 }) {
   const { scorm, interactionId, type, learnerResponse, correctResponse, description, result } = params;
   if (!scorm.initialized) return;
