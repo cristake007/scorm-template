@@ -63,13 +63,23 @@ export function useScormRuntime(course: CourseModel, router: Router): RuntimeSto
   });
 
   const bookmark = scorm.get("cmi.location") || state.lastRoute || "";
-  if (bookmark) {
+  const fallbackRoute = course.system?.fallbackRoute || course.lessons[0]?.chapters[0]?.route || "/overview";
+
+  const restoreBookmark = async () => {
+    if (!bookmark) return;
+
     try {
-      router.replace(bookmark);
+      await router.replace(bookmark);
     } catch {
-      // ignore invalid bookmark
+      try {
+        await router.replace(fallbackRoute);
+      } catch {
+        // ignore invalid fallback route
+      }
     }
-  }
+  };
+
+  void restoreBookmark();
 
   const uninstallAutoCommit = installScormAutoCommit(scorm, 30000);
 
