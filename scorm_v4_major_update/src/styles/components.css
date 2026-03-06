@@ -180,17 +180,13 @@
 }
 .scenarioTree__nodeText { font-weight: 700; margin-bottom: 2px; }
 .scenarioTree__branchWrap {
+  position: relative;
   height: 44px;
   width: min(100%, var(--scenario-branch-max));
   margin: 0 auto;
   color: rgba(25, 118, 210, 0.65);
 }
 .scenarioTree__branches { width: 100%; height: 100%; display: block; }
-.scenarioTree__arrowHead {
-  fill: color-mix(in srgb, var(--color-primary) 88%, #0f172a);
-  stroke: none;
-}
-
 .scenarioTree__branches path {
   fill: none;
   stroke: currentColor;
@@ -198,10 +194,16 @@
   stroke-linecap: butt;
   stroke-linejoin: miter;
   vector-effect: non-scaling-stroke;
-  marker-end: url(#scenarioArrow);
 }
 .scenarioTree__branches--selected {
   color: color-mix(in srgb, var(--color-primary) 85%, #0f172a);
+}
+.scenarioTree__lineEndArrow {
+  position: absolute;
+  bottom: -2px;
+  transform: translateX(-50%);
+  color: color-mix(in srgb, var(--color-primary) 85%, #0f172a);
+  pointer-events: none;
 }
 .scenarioTree__choices { display: grid; gap: 10px; }
 .scenarioTree__choices--split {

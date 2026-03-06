@@ -11,13 +11,14 @@
 
         <div class="scenarioTree__branchWrap" aria-hidden="true">
           <svg viewBox="0 0 100 44" preserveAspectRatio="none" class="scenarioTree__branches scenarioTree__branches--selected">
-            <defs>
-              <marker id="scenarioArrow" markerWidth="12" markerHeight="12" refX="6" refY="6" orient="auto" markerUnits="strokeWidth">
-                <path class="scenarioTree__arrowHead" d="M0,0 L12,6 L0,12 z" />
-              </marker>
-            </defs>
             <path :d="selectedConnectorPath(step)" />
           </svg>
+          <v-icon
+            icon="mdi-arrow-down-thin"
+            class="scenarioTree__lineEndArrow"
+            :style="selectedArrowStyle(step)"
+            size="22"
+          />
         </div>
 
         <div
@@ -134,12 +135,21 @@ function branchChoices(choices: ScenarioChoice[]): ScenarioChoice[] {
   return choices.slice(0, 3);
 }
 
-function selectedConnectorPath(step: { selectedChoiceId: string; branches: Array<{ id: string }> }) {
+function selectedConnectorX(step: { selectedChoiceId: string; branches: Array<{ id: string }> }) {
   const total = Math.max(1, Math.min(3, step.branches.length));
   const selectedIndex = Math.max(0, step.branches.findIndex((branch) => branch.id === step.selectedChoiceId));
   const clamped = Math.min(selectedIndex, total - 1);
-  const x = ((clamped + 0.5) * 100) / total;
+  return ((clamped + 0.5) * 100) / total;
+}
+
+function selectedConnectorPath(step: { selectedChoiceId: string; branches: Array<{ id: string }> }) {
+  const x = selectedConnectorX(step);
   return `M50 2 L50 16 L${x} 16 L${x} 38`;
+}
+
+function selectedArrowStyle(step: { selectedChoiceId: string; branches: Array<{ id: string }> }) {
+  const x = selectedConnectorX(step);
+  return { left: `${x}%` };
 }
 
 function pick(choice: ScenarioChoice) {
