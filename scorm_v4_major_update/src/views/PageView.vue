@@ -112,6 +112,16 @@ const VIEWED_PERSIST_THROTTLE_MS = 1200;
 let viewedPersistTimer: number | null = null;
 let lastViewedPersistAt = 0;
 
+function queueIdle(task: () => void, timeout = 250) {
+  if (typeof window === "undefined") return;
+  const ric = (window as any).requestIdleCallback as ((cb: () => void, opts?: { timeout: number }) => number) | undefined;
+  if (ric) {
+    ric(task, { timeout });
+    return;
+  }
+  window.setTimeout(task, 0);
+}
+
 function getCurrentChapter() {
   const meta: any = route.meta ?? {};
   const lessonId = meta.lessonId as string | undefined;
@@ -254,9 +264,7 @@ function onManualComplete() {
   const { lessonId, chapterId } = info;
   markChapterComplete(state, lessonId, chapterId);
 
-  reconcileCourseState({ course, state, scorm, touchedLessonId: lessonId });
-  saveProgress(scorm, state);
-  scorm.commit();
+  reconcileAndPersist(lessonId, { persist: true, commit: true });
 }
 
 function isChapterDone(): boolean {
@@ -297,8 +305,18 @@ function isChapterDone(): boolean {
   return false;
 }
 
-function recomputeChapterCompletion(options: { commit?: boolean; persist?: boolean } = {}) {
+function reconcileAndPersist(lessonId: string, options: { commit?: boolean; persist?: boolean } = {}) {
   const { commit = true, persist = true } = options;
+  queueIdle(() => {
+    reconcileCourseState({ course, state, scorm, touchedLessonId: lessonId });
+    if (!persist) return;
+
+    saveProgress(scorm, state);
+    if (commit) scorm.commit();
+  });
+}
+
+function recomputeChapterCompletion(options: { commit?: boolean; persist?: boolean } = {}) {
   const info = getCurrentChapter();
   if (!info) return;
 
@@ -308,11 +326,7 @@ function recomputeChapterCompletion(options: { commit?: boolean; persist?: boole
     markChapterComplete(state, lessonId, chapterId);
   }
 
-  if (!persist) return;
-
-  reconcileCourseState({ course, state, scorm, touchedLessonId: lessonId });
-  saveProgress(scorm, state);
-  if (commit) scorm.commit();
+  reconcileAndPersist(lessonId, options);
 }
 
 function flushViewedPersist() {
@@ -420,13 +434,13 @@ function onQuizSubmitted(payload: {
 watch(
   () => route.fullPath,
   () => {
-    // allow DOM to update then re-bind observer
-    window.setTimeout(setupViewedObserver, 0);
+    // allow route DOM swap, then bind observer after paint
+    window.requestAnimationFrame(() => window.requestAnimationFrame(setupViewedObserver));
   }
 );
 
 onMounted(() => {
-  setupViewedObserver();
+  window.requestAnimationFrame(() => setupViewedObserver());
 });
 
 onBeforeUnmount(() => {

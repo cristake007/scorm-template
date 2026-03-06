@@ -18,6 +18,7 @@ type ScormRuntimeShape = {
   state: ProgressStateV1;
   nav: ComputedRef<NavLesson[]>;
   lockedMessage: Ref<string>;
+  ready: Promise<void>;
   cleanup: () => void;
   finishCourse: () => boolean;
 };
@@ -62,15 +63,18 @@ export function useScormRuntime(course: CourseModel, router: Router): RuntimeSto
     }
   });
 
-  const bookmark = scorm.get("cmi.location") || state.lastRoute || "";
   const fallbackRoute = course.system?.fallbackRoute || course.lessons[0]?.chapters[0]?.route || "/overview";
 
   const restoreBookmark = async () => {
-    if (!bookmark) return;
+    const bookmark = scorm.get("cmi.location") || state.lastRoute || "";
+    const targetRoute = bookmark || fallbackRoute;
 
     try {
-      await router.replace(bookmark);
+      if (router.currentRoute.value.fullPath !== targetRoute) {
+        await router.replace(targetRoute);
+      }
     } catch {
+      if (targetRoute === fallbackRoute) return;
       try {
         await router.replace(fallbackRoute);
       } catch {
@@ -79,7 +83,7 @@ export function useScormRuntime(course: CourseModel, router: Router): RuntimeSto
     }
   };
 
-  void restoreBookmark();
+  const ready = restoreBookmark();
 
   const uninstallAutoCommit = installScormAutoCommit(scorm, 30000);
 
@@ -142,6 +146,6 @@ export function useScormRuntime(course: CourseModel, router: Router): RuntimeSto
     return scorm.terminate({ exit: "normal" });
   };
 
-  const runtime: ScormRuntimeShape = { scorm, state, nav, lockedMessage, cleanup, finishCourse };
+  const runtime: ScormRuntimeShape = { scorm, state, nav, lockedMessage, ready, cleanup, finishCourse };
   return { ...runtime, course };
 }
