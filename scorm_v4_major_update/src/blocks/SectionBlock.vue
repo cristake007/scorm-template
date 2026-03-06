@@ -11,9 +11,11 @@
 
     <div class="scorm-section__body">
       <div
-        v-for="child in blocks"
+        v-for="(child, idx) in blocks"
         :key="child.id"
         class="scorm-block"
+        :id="sectionChildBlockId(child, idx)"
+        :class="sectionChildBlockClass(child)"
         :data-block-id="child.id"
       >
         <BlockRenderer
@@ -28,6 +30,22 @@
 
 <script setup lang="ts">
 import BlockRenderer from "./BlockRenderer.vue";
+
+function toCssId(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "item";
+}
+
+function sectionChildBlockId(block: any, idx: number) {
+  const blockId = block?.id ? toCssId(String(block.id)) : `index-${idx + 1}`;
+  return `section-block-${blockId}`;
+}
+
+function sectionChildBlockClass(block: any) {
+  return [`block-type-${toCssId(String(block?.type || "unknown"))}`];
+}
 
 defineProps<{
   type: "section";

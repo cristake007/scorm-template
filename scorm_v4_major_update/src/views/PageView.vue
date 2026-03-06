@@ -1,17 +1,18 @@
 <template>
-  <div class="pageRoot">
+  <div class="pageRoot" :id="pageDomId">
     <div v-if="title" class="scorm-h1">{{ title }}</div>
 
     <div v-if="subtitle" class="scorm-muted pageView__subtitle">
       {{ subtitle }}
     </div>
 
-    <div ref="pageEl" class="pageBlocks">
+    <div ref="pageEl" class="pageBlocks" :id="`${pageDomId}-blocks`">
       <div
         v-for="(b, idx) in blocks"
         :key="b.id || idx"
-        :id="blockDomId(idx)"
+        :id="blockDomId(b, idx)"
         class="scorm-block"
+        :class="blockClassList(b)"
         :data-block-id="b.id"
         :data-block-index="idx"
         :data-block-type="String(b?.type || 'unknown')"
@@ -75,8 +76,23 @@ function findBlockById(blocks: AnyBlock[], id: string): AnyBlock | undefined {
   return flattenBlocks(blocks).find((b) => b?.id === id);
 }
 
-function blockDomId(idx: number) {
-  return `block-${idx + 1}`;
+function toCssId(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "item";
+}
+
+function blockDomId(block: AnyBlock, idx: number) {
+  const blockId = block?.id ? toCssId(String(block.id)) : `index-${idx + 1}`;
+  return `block-${blockId}`;
+}
+
+function blockClassList(block: AnyBlock) {
+  return [
+    `block-type-${toCssId(String(block?.type || "unknown"))}`,
+    block?.id ? `block-id-${toCssId(String(block.id))}` : "block-id-missing"
+  ];
 }
 
 import {
@@ -131,6 +147,16 @@ const title = computed(() => {
   return "";
 });
 const subtitle = computed(() => "");
+
+const pageDomId = computed(() => {
+  const meta: any = route.meta ?? {};
+  if (meta.systemId) return `page-system-${toCssId(String(meta.systemId))}`;
+
+  const info = getCurrentChapter();
+  if (!info) return "page-unknown";
+
+  return `page-${toCssId(info.lessonId)}-${toCssId(info.chapterId)}`;
+});
 
 const showManualComplete = computed(() => {
   const info = getCurrentChapter();
