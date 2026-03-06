@@ -27,6 +27,10 @@ export function installCourseGuards(opts: {
   let lastCommitAt = 0;
   let pendingTimer: number | null = null;
 
+  const PERSIST_THROTTLE_MS = 1200;
+  let lastPersistAt = 0;
+  let persistTimer: number | null = null;
+
   function commitThrottled() {
     if (!scorm.initialized) return;
 
@@ -88,6 +92,29 @@ export function installCourseGuards(opts: {
     return true;
   });
 
+  function flushPersistAndCommit() {
+    persistTimer = null;
+    lastPersistAt = Date.now();
+
+    // Persist suspend_data (state)
+    saveProgress(scorm, state);
+
+    // Throttled commit for route-change saves
+    commitThrottled();
+  }
+
+  function schedulePersistAndCommit() {
+    const elapsed = Date.now() - lastPersistAt;
+    if (elapsed >= PERSIST_THROTTLE_MS) {
+      flushPersistAndCommit();
+      return;
+    }
+
+    if (persistTimer != null) return;
+
+    persistTimer = window.setTimeout(flushPersistAndCommit, PERSIST_THROTTLE_MS - elapsed);
+  }
+
   // Bookmark + persist progress on each route change
   router.afterEach((to) => {
     if (!scorm.initialized) return;
@@ -95,10 +122,6 @@ export function installCourseGuards(opts: {
     // Bookmark
     scorm.set("cmi.location", to.fullPath);
 
-    // Persist suspend_data (state)
-    saveProgress(scorm, state);
-
-    // Throttled commit for route-change saves
-    commitThrottled();
+    schedulePersistAndCommit();
   });
 }

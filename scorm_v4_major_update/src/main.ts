@@ -45,7 +45,9 @@ async function boot() {
   const app = createApp(Root).use(router).use(vuetify);
   installRuntimeStore(app, runtime);
 
+  await runtime.ready;
+  await router.isReady();
   app.mount("#app");
 }
 
-boot();
+void boot();

@@ -12,6 +12,7 @@ export type RuntimeStore = {
   state: ProgressStateV1;
   nav: ComputedRef<NavLesson[]>;
   lockedMessage: Ref<string>;
+  ready: Promise<void>;
   cleanup: () => void;
   finishCourse: () => boolean;
 };
