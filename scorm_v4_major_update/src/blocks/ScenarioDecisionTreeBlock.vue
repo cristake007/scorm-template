@@ -12,22 +12,18 @@
         <div class="scenarioTree__branchWrap" aria-hidden="true">
           <svg viewBox="0 0 100 44" preserveAspectRatio="none" class="scenarioTree__branches scenarioTree__branches--selected">
             <defs>
-              <marker id="scenarioArrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                <path d="M0,0 L6,3 L0,6 z" fill="currentColor" />
+              <marker id="scenarioArrow" markerWidth="12" markerHeight="12" refX="6" refY="6" orient="auto" markerUnits="strokeWidth">
+                <path class="scenarioTree__arrowHead" d="M0,0 L12,6 L0,12 z" />
               </marker>
             </defs>
-            <path
-              v-if="isSelectedLeft(step)"
-              d="M50 2 L50 22 L25 22 L25 42"
-            />
-            <path
-              v-else
-              d="M50 2 L50 22 L75 22 L75 42"
-            />
+            <path :d="selectedConnectorPath(step)" />
           </svg>
         </div>
 
-        <div class="scenarioTree__choices scenarioTree__choices--split">
+        <div
+          class="scenarioTree__choices scenarioTree__choices--split"
+          :style="{ '--scenario-columns': Math.min(3, Math.max(1, step.branches.length)) }"
+        >
           <div
             v-for="branch in step.branches"
             :key="branch.id"
@@ -50,7 +46,10 @@
           <div class="scenarioTree__nodeText">{{ currentNode.text }}</div>
         </div>
 
-        <div class="scenarioTree__choices scenarioTree__choices--split">
+        <div
+          class="scenarioTree__choices scenarioTree__choices--split"
+          :style="{ '--scenario-columns': Math.min(3, Math.max(1, currentBranches.length)) }"
+        >
           <v-btn
             v-for="choice in currentBranches"
             :key="choice.id"
@@ -132,17 +131,15 @@ function detectOutcome(choice: ScenarioChoice): ChoiceOutcome {
 }
 
 function branchChoices(choices: ScenarioChoice[]): ScenarioChoice[] {
-  if (choices.length <= 2) return choices;
-
-  const wrongChoice = choices.find((choice) => detectOutcome(choice) === "wrong");
-  const correctChoice = choices.find((choice) => detectOutcome(choice) === "correct" && choice.id !== wrongChoice?.id);
-
-  if (wrongChoice && correctChoice) return [wrongChoice, correctChoice];
-  return choices.slice(0, 2);
+  return choices.slice(0, 3);
 }
 
-function isSelectedLeft(step: { selectedChoiceId: string; branches: Array<{ id: string }> }) {
-  return step.branches[0]?.id === step.selectedChoiceId;
+function selectedConnectorPath(step: { selectedChoiceId: string; branches: Array<{ id: string }> }) {
+  const total = Math.max(1, Math.min(3, step.branches.length));
+  const selectedIndex = Math.max(0, step.branches.findIndex((branch) => branch.id === step.selectedChoiceId));
+  const clamped = Math.min(selectedIndex, total - 1);
+  const x = ((clamped + 0.5) * 100) / total;
+  return `M50 2 L50 16 L${x} 16 L${x} 38`;
 }
 
 function pick(choice: ScenarioChoice) {
