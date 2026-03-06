@@ -95,12 +95,8 @@ function blockClassList(block: AnyBlock) {
   ];
 }
 
-import {
-  markChapterComplete,
-  recordQuizAttempt,
-  reconcileCourseState,
-  saveProgress
-} from "../engine/progress/progressStore";
+import { markChapterComplete, recordQuizAttempt, saveProgress } from "../engine/progress/progressStore";
+import { reconcileCourseState } from "../engine/progress/completion";
 
 const route = useRoute();
 
