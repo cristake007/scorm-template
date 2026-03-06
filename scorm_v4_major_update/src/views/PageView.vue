@@ -288,7 +288,8 @@ function isChapterDone(): boolean {
   return false;
 }
 
-function recomputeChapterCompletion() {
+function recomputeChapterCompletion(options: { commit?: boolean } = {}) {
+  const { commit = true } = options;
   const info = getCurrentChapter();
   if (!info) return;
 
@@ -300,7 +301,7 @@ function recomputeChapterCompletion() {
 
   reconcileCourseState({ course, state, scorm, touchedLessonId: lessonId });
   saveProgress(scorm, state);
-  scorm.commit();
+  if (commit) scorm.commit();
 }
 
 
@@ -350,6 +351,12 @@ function onQuizSubmitted(payload: {
   passScore: number;
   responses: Record<string, string | string[]>;
 }) {
+  const info = getCurrentChapter();
+  const quizBlock = info
+    ? flattenBlocks(info.ch.page.blocks ?? []).find((b: any) => b?.quizId === payload.quizId)
+    : undefined;
+  const onSubmit = quizBlock?.onSubmit ?? {};
+
   recordQuizAttempt({
     state,
     quizId: payload.quizId,
@@ -358,6 +365,10 @@ function onQuizSubmitted(payload: {
     passScore: payload.passScore,
     responses: payload.responses
   });
+
+  if (info && onSubmit.markChapterComplete === true) {
+    markChapterComplete(state, info.lessonId, info.chapterId);
+  }
 
   try {
     const { interactionType, description } = resolveQuizMeta(payload.quizId);
@@ -374,7 +385,7 @@ function onQuizSubmitted(payload: {
     // ignore interaction write errors (LMS variance)
   }
 
-  recomputeChapterCompletion();
+  recomputeChapterCompletion({ commit: onSubmit.commit ?? true });
 }
 
 watch(
