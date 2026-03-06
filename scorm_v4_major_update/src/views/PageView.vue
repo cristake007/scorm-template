@@ -108,6 +108,9 @@ const { course, state, scorm, finishCourse } = ctx;
 const pageEl = ref<HTMLElement | null>(null);
 const finishError = ref("");
 let observer: IntersectionObserver | null = null;
+const VIEWED_PERSIST_THROTTLE_MS = 1200;
+let viewedPersistTimer: number | null = null;
+let lastViewedPersistAt = 0;
 
 function getCurrentChapter() {
   const meta: any = route.meta ?? {};
@@ -183,6 +186,8 @@ function setupViewedObserver() {
 
       const { lessonId, chapterId, ch } = info;
 
+      let changed = false;
+
       for (const e of entries) {
         if (!e.isIntersecting) continue;
 
@@ -205,11 +210,15 @@ function setupViewedObserver() {
         const curr = state.viewed[key] ?? [];
         if (!curr.includes(blockId)) {
           state.viewed[key] = [...curr, blockId];
+          changed = true;
         }
       }
 
-      // after we mark viewed, recompute completion
-      recomputeChapterCompletion();
+      if (!changed) return;
+
+      // Keep scroll-path updates in-memory, then persist in a throttled batch.
+      recomputeChapterCompletion({ persist: false, commit: false });
+      scheduleViewedPersist();
     },
     { threshold: 0.35 }
   );
@@ -288,8 +297,8 @@ function isChapterDone(): boolean {
   return false;
 }
 
-function recomputeChapterCompletion(options: { commit?: boolean } = {}) {
-  const { commit = true } = options;
+function recomputeChapterCompletion(options: { commit?: boolean; persist?: boolean } = {}) {
+  const { commit = true, persist = true } = options;
   const info = getCurrentChapter();
   if (!info) return;
 
@@ -299,9 +308,29 @@ function recomputeChapterCompletion(options: { commit?: boolean } = {}) {
     markChapterComplete(state, lessonId, chapterId);
   }
 
+  if (!persist) return;
+
   reconcileCourseState({ course, state, scorm, touchedLessonId: lessonId });
   saveProgress(scorm, state);
   if (commit) scorm.commit();
+}
+
+function flushViewedPersist() {
+  viewedPersistTimer = null;
+  lastViewedPersistAt = Date.now();
+  recomputeChapterCompletion({ commit: true, persist: true });
+}
+
+function scheduleViewedPersist() {
+  const elapsed = Date.now() - lastViewedPersistAt;
+  if (elapsed >= VIEWED_PERSIST_THROTTLE_MS) {
+    flushViewedPersist();
+    return;
+  }
+
+  if (viewedPersistTimer != null) return;
+
+  viewedPersistTimer = window.setTimeout(flushViewedPersist, VIEWED_PERSIST_THROTTLE_MS - elapsed);
 }
 
 
@@ -401,6 +430,12 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  if (viewedPersistTimer != null) {
+    window.clearTimeout(viewedPersistTimer);
+    viewedPersistTimer = null;
+    flushViewedPersist();
+  }
+
   if (observer) observer.disconnect();
   observer = null;
 });
