@@ -1,26 +1,35 @@
-.scorm-page {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.scorm-card {
-  background: var(--color-surface);
-  border: 0;
-  border-radius: 0;
-  padding: 18px;
+/* Shared component styles */
+.scorm-section--card {
+  background: #fff;
   box-shadow: var(--shadow-sm);
 }
 
-.scorm-h1 {
-  margin: 0 0 12px 0;
-  font-size: 28px;
-  line-height: 1.2;
+.scorm-section--plain {
+  background: transparent;
+  box-shadow: none;
 }
 
-.scorm-muted {
-  margin: 0;
-  color: var(--text-muted);
+.scorm-section--pad-sm { padding: 10px; }
+.scorm-section--pad-md { padding: 14px; }
+.scorm-section--pad-lg { padding: 18px; }
+
+.scorm-section__title {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.scorm-section__body {
+  display: grid;
+  gap: 12px;
+}
+
+/* style content buttons without affecting nav drawer */
+.pageRoot .v-btn,
+.scorm-card .v-btn {
+  border-radius: var(--button-radius);
+  padding-inline: var(--button-padding-inline);
+  padding-block: var(--button-padding-block);
 }
 
 /* --- layout.grid (GridBlock.vue) --- */

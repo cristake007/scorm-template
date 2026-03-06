@@ -14,14 +14,11 @@ import { saveProgress } from "./engine/progress/progressStore";
 import { buildRoutes } from "./engine/router/routes";
 import { useScormRuntime } from "./scorm/useScormRuntime";
 
-import "./styles/master.css";
-import "./styles/tokens.css";
+import "./styles/variables.css";
 import "./styles/base.css";
+import "./styles/AppShell.css";
 import "./styles/components.css";
-import "./styles/shell.css";
-import "./styles/app-shell.css";
-import "./styles/page-view.css";
-import "./styles/theme.css";
+import "./styles/page.css";
 
 const vuetify = createVuetify({
   icons: { defaultSet: "mdi", aliases, sets: { mdi } }
