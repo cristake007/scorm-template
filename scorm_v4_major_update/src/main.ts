@@ -10,7 +10,6 @@ import App from "./App.vue";
 
 import { installRuntimeStore } from "./core/runtime/runtimeStore";
 import { loadCourse } from "./engine/course/courseLoader";
-import { saveProgress } from "./engine/progress/progressStore";
 import { buildRoutes } from "./engine/router/routes";
 import { useScormRuntime } from "./scorm/useScormRuntime";
 
@@ -51,15 +50,6 @@ async function boot() {
   installRuntimeStore(app, runtime);
 
   app.mount("#app");
-
-  window.addEventListener("pagehide", () => {
-    try {
-      saveProgress(runtime.scorm, runtime.state);
-      runtime.scorm.commit();
-    } finally {
-      runtime.cleanup();
-    }
-  });
 }
 
 boot();
