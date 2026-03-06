@@ -156,10 +156,87 @@
 
 .scenarioTree__title { margin-bottom: 10px; }
 .scenarioTree__prompt { margin: 0 0 12px; color: var(--text-muted); }
-.scenarioTree__nodeText { font-weight: 600; margin-bottom: 10px; }
-.scenarioTree__choices { display: flex; flex-wrap: wrap; gap: 8px; }
-.scenarioTree__choiceBtn { text-transform: none; }
-.scenarioTree__feedback { margin-top: 10px; color: var(--text-muted); }
+.scenarioTree__workflow {
+  --scenario-lane-max: 860px;
+  --scenario-branch-max: 620px;
+  display: grid;
+  gap: 18px;
+  width: min(100%, var(--scenario-lane-max));
+  margin-inline: auto;
+}
+.scenarioTree__step { display: grid; gap: 8px; }
+.scenarioTree__questionCard {
+  border-radius: 14px;
+  border: 1px solid rgba(25, 118, 210, 0.2);
+  background: #fff;
+  padding: 12px;
+  box-shadow: var(--shadow-sm);
+  width: min(100%, var(--scenario-branch-max));
+  margin-inline: auto;
+}
+.scenarioTree__questionCard--active {
+  border-color: rgba(25, 118, 210, 0.45);
+  box-shadow: 0 0 0 1px rgba(25, 118, 210, 0.2), var(--shadow-sm);
+}
+.scenarioTree__nodeText { font-weight: 700; margin-bottom: 2px; }
+.scenarioTree__branchWrap {
+  position: relative;
+  height: 44px;
+  width: min(100%, var(--scenario-branch-max));
+  margin: 0 auto;
+  color: rgba(25, 118, 210, 0.65);
+}
+.scenarioTree__branches { width: 100%; height: 100%; display: block; }
+.scenarioTree__branches path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.8;
+  stroke-linecap: butt;
+  stroke-linejoin: miter;
+  vector-effect: non-scaling-stroke;
+}
+.scenarioTree__branches--selected {
+  color: color-mix(in srgb, var(--color-primary) 85%, #0f172a);
+}
+.scenarioTree__lineEndArrow {
+  position: absolute;
+  bottom: -2px;
+  transform: translateX(-50%);
+  color: color-mix(in srgb, var(--color-primary) 85%, #0f172a);
+  pointer-events: none;
+}
+.scenarioTree__choices { display: grid; gap: 10px; }
+.scenarioTree__choices--split {
+  grid-template-columns: repeat(var(--scenario-columns, 2), minmax(0, 1fr));
+  width: min(100%, var(--scenario-branch-max));
+  margin-inline: auto;
+}
+.scenarioTree__choiceBtn { text-transform: none; min-height: 48px; }
+.scenarioTree__branchCard {
+  border-radius: 12px;
+  border: 1px solid rgba(25, 118, 210, 0.2);
+  background: #fff;
+  padding: 10px;
+  min-height: 64px;
+  transition: all .18s ease;
+}
+.scenarioTree__branchLabel { font-weight: 600; }
+.scenarioTree__branchCard.is-selected { box-shadow: 0 0 0 1px rgba(25, 118, 210, 0.25); }
+.scenarioTree__branchCard.is-dimmed { opacity: .45; }
+.scenarioTree__branchCard.is-correct { border-color: #7ecb9a; background: #f0fbf4; }
+.scenarioTree__branchCard.is-wrong { border-color: #e69e9b; background: #fff4f4; }
+.scenarioTree__branchCard.is-neutral { border-color: #cad5df; background: #f7f9fb; }
+.scenarioTree__feedback { margin-top: 8px; color: var(--text-muted); font-size: 13px; }
+.scenarioTree__outcome { color: var(--text-muted); font-size: 14px; }
+@media (max-width: 760px) {
+  .scenarioTree__workflow { --scenario-branch-max: 100%; }
+  .scenarioTree__choices--split { grid-template-columns: 1fr; }
+  .scenarioTree__branchWrap { display: none; }
+}
+
+@media (min-width: 1400px) {
+  .scenarioTree__workflow { --scenario-lane-max: 760px; }
+}
 
 .kpiMetrics__title { margin-bottom: 12px; }
 .kpiMetrics__grid {

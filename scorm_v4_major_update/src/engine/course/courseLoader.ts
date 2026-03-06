@@ -100,7 +100,7 @@ export type ScenarioDecisionTreeBlock = BlockBase & {
   nodes: Array<{
     id: string;
     text: string;
-    choices: Array<{ id: string; label: string; feedback: string; nextNodeId?: string }>;
+    choices: Array<{ id: string; label: string; feedback: string; nextNodeId?: string; outcome?: "correct" | "wrong" | "neutral" }>;
   }>;
 };
 
