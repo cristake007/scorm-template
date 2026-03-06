@@ -1,10 +1,16 @@
 <template>
-  <component
-    :is="Comp"
-    v-bind="compProps"
-    @quiz-submitted="forwardQuiz"
-    @viewed-ids="forwardViewed"
-  />
+  <div
+    class="blockComponent"
+    :id="componentDomId"
+    :class="[`blockComponent--${componentTypeSlug}`]"
+  >
+    <component
+      :is="Comp"
+      v-bind="compProps"
+      @quiz-submitted="forwardQuiz"
+      @viewed-ids="forwardViewed"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -46,6 +52,19 @@ const emit = defineEmits<{
 }>();
 
 const ctx = inject(RuntimeStoreKey);
+
+function toCssId(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "item";
+}
+
+const componentTypeSlug = computed(() => toCssId(String(props.block?.type || "unknown")));
+const componentDomId = computed(() => {
+  const blockId = props.block?.id ? toCssId(String(props.block.id)) : componentTypeSlug.value;
+  return `component-${blockId}`;
+});
 
 // Component chooser
 const Comp = computed(() => {

@@ -1,0 +1,109 @@
+:root {
+  --color-primary: #0059b3;
+  --color-primary-strong: #00428a;
+  --color-primary-soft: #e9f2ff;
+  --color-bg: #f2f5fa;
+  --color-surface: #ffffff;
+  --color-border: rgba(15, 23, 42, 0.12);
+
+  --text-default: #0f172a;
+  --text-muted: #5b6472;
+
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 8px 28px rgba(15, 23, 42, 0.1);
+
+  --font-family-base: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-size-body: 16px;
+  --line-height-body: 1.5;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+
+  --shell-topbar-height: 80px;
+  --shell-drawer-width: 360px;
+  --shell-nav-row-pad-y: 14px;
+  --shell-nav-row-pad-x: 18px;
+  --shell-nav-row-gap: 14px;
+  --shell-nav-row-title-size: 15px;
+  --shell-nav-divider-color: rgba(15, 23, 42, 0.1);
+
+  --page-max: 1100px;
+  --page-max-wide: 1320px;
+  --page-pad: 24px;
+
+  --card-pad: 18px;
+  --card-radius: var(--radius-md);
+
+  --button-radius: 10px;
+  --button-padding-inline: 14px;
+  --button-padding-block: 8px;
+
+  --quiz-pass: #2e7d32;
+  --quiz-fail: #c62828;
+
+  --focus-ring: 2px solid var(--color-primary);
+}
+
+body {
+  background: radial-gradient(circle at top right, #ffffff 0%, #f3f7ff 48%, #eef2f8 100%);
+  color: var(--text-default);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
+}
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.scorm-page {
+  width: 100%;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: var(--page-pad);
+}
+
+.drawerClosed .scorm-page {
+  max-width: var(--page-max-wide);
+}
+
+.scorm-card {
+  background: var(--color-surface);
+  border: 0;
+  border-radius: var(--card-radius);
+  padding: var(--card-pad);
+  box-shadow: var(--shadow-sm);
+}
+
+.scorm-h1 {
+  margin: 0 0 10px 0;
+  font-size: 28px;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.scorm-muted {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.scorm-media {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 0;
+  background: #00000008;
+  overflow: hidden;
+}
+
+.no-select {
+  user-select: none;
+}

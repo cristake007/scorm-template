@@ -1,8 +1,8 @@
 <template>
-  <v-app>
+  <v-app id="app-shell">
     <a class="skipLink" href="#mainContent">Skip to course content</a>
     <v-layout class="appLayout" :class="{ drawerClosed: !drawerOpen }">
-      <v-app-bar color="surface" :elevation="2" density="comfortable" :height="80">
+      <v-app-bar id="app-shell-topbar" color="surface" :elevation="2" density="comfortable" :height="80">
         <template #prepend>
           <v-app-bar-nav-icon icon="mdi-menu" aria-label="Toggle navigation" @click="drawerOpen = !drawerOpen" />
         </template>
@@ -27,10 +27,10 @@
         :width="drawerWidth"
         :temporary="!mdAndUp"
         :permanent="mdAndUp"
-        class="navDrawer"
+        class="navDrawer" id="app-shell-nav-drawer"
         :class="{ isResizing: resizing }"
       >
-        <div class="navDrawer__header">
+        <div class="navDrawer__header" id="app-shell-nav-header">
           <div class="navDrawer__courseTitle">{{ courseTitle }}</div>
         </div>
 
@@ -41,6 +41,7 @@
           rounded="0"
           :ripple="false"
           class="navRow navRow--root"
+          id="nav-item-overview"
           :class="{ 'navRow--active': route.path === overviewRoute }"
         >
           <div class="navRow__inner">
@@ -53,7 +54,7 @@
         <div class="navDivider"></div>
 
         <template v-for="lesson in nav" :key="lesson.lessonId">
-          <v-btn variant="text" block rounded="0" :ripple="false" class="navRow navRow--root" @click="toggleLesson(lesson.lessonId)">
+          <v-btn variant="text" block rounded="0" :ripple="false" class="navRow navRow--root" :id="navLessonToggleId(lesson.lessonId)" @click="toggleLesson(lesson.lessonId)">
             <div class="navRow__inner">
               <div class="navRow__left">
                 <span class="navRow__title">{{ lesson.title }}</span>
@@ -77,6 +78,7 @@
                 rounded="0"
                 :ripple="false"
                 class="navRow navRow--child"
+                :id="navChapterId(chapter.route)"
                 :class="{ 'navRow--active': route.path === chapter.route }"
               >
                 <div class="navRow__inner">
@@ -99,20 +101,20 @@
           </transition>
         </template>
 
-        <div v-if="lockedMessage" class="navLockedMsg">{{ lockedMessage }}</div>
+        <div v-if="lockedMessage" class="navLockedMsg" id="app-shell-nav-locked-message">{{ lockedMessage }}</div>
 
         <div
           v-if="mdAndUp"
           ref="resizerEl"
-          class="drawerResizer"
+          class="drawerResizer" id="app-shell-nav-resizer"
           role="separator"
           aria-label="Resize navigation"
           @pointerdown="startResize"
         />
       </v-navigation-drawer>
 
-      <v-main id="mainContent" ref="mainContentEl" tabindex="-1">
-        <div v-if="showChapterPager" ref="pagerEl" class="chapterPager" aria-label="Chapter navigation">
+      <v-main id="mainContent" class="appShellMain" ref="mainContentEl" tabindex="-1">
+        <div v-if="showChapterPager" ref="pagerEl" class="chapterPager" id="app-shell-chapter-pager" aria-label="Chapter navigation">
           <v-btn v-if="prevRoute" icon="mdi-chevron-left" color="primary" class="chapterPager__btn" @click="goToChapter(prevRoute)" />
           <v-btn v-if="nextRoute" icon="mdi-chevron-right" color="primary" class="chapterPager__btn" @click="goToChapter(nextRoute)" />
         </div>
@@ -202,6 +204,21 @@ let scrollRaf = 0;
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 const isLessonOpen = (id: string) => openLessons.value.has(id);
 const chapterDisplayIndex = (chapterRoute: string) => chapterIndexByRoute.value.get(chapterRoute) ?? 0;
+
+function toCssId(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "item";
+}
+
+function navLessonToggleId(lessonId: string) {
+  return `nav-lesson-toggle-${toCssId(lessonId)}`;
+}
+
+function navChapterId(chapterRoute: string) {
+  return `nav-chapter-${toCssId(chapterRoute)}`;
+}
 
 function toggleLesson(id: string) {
   const next = new Set(openLessons.value);

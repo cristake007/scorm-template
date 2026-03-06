@@ -11,9 +11,11 @@
 
     <div class="scorm-section__body">
       <div
-        v-for="child in blocks"
+        v-for="(child, idx) in blocks"
         :key="child.id"
         class="scorm-block"
+        :id="sectionChildBlockId(child, idx)"
+        :class="sectionChildBlockClass(child)"
         :data-block-id="child.id"
       >
         <BlockRenderer
@@ -28,6 +30,22 @@
 
 <script setup lang="ts">
 import BlockRenderer from "./BlockRenderer.vue";
+
+function toCssId(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "item";
+}
+
+function sectionChildBlockId(block: any, idx: number) {
+  const blockId = block?.id ? toCssId(String(block.id)) : `index-${idx + 1}`;
+  return `section-block-${blockId}`;
+}
+
+function sectionChildBlockClass(block: any) {
+  return [`block-type-${toCssId(String(block?.type || "unknown"))}`];
+}
 
 defineProps<{
   type: "section";
@@ -46,28 +64,3 @@ defineEmits<{
   (e: "viewed-ids", ids: string[]): void;
 }>();
 </script>
-
-<style scoped>
-.scorm-section--card {
-  border: 0;
-  border-radius: 0;
-  background: #fff;
-}
-.scorm-section--plain {
-  border: 0;
-  background: transparent;
-}
-.scorm-section--pad-sm { padding: 10px; }
-.scorm-section--pad-md { padding: 14px; }
-.scorm-section--pad-lg { padding: 18px; }
-
-.scorm-section__title {
-  font-weight: 700;
-  font-size: 16px;
-  margin-bottom: 10px;
-}
-.scorm-section__body {
-  display: grid;
-  gap: 12px;
-}
-</style>

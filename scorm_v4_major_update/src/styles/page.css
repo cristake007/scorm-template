@@ -1,0 +1,48 @@
+.pageRoot {
+  display: block;
+}
+
+.pageBlocks {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scorm-block {
+  transition: box-shadow 180ms ease, border-color 180ms ease;
+  scroll-margin-top: 96px;
+}
+
+.pageView__subtitle {
+  margin-bottom: 14px;
+  font-size: 17px;
+}
+
+.manualCompleteWrap {
+  margin-top: 18px;
+}
+
+.finishCourseWrap {
+  margin-top: 28px;
+  padding: 18px;
+  display: grid;
+  gap: 8px;
+  background: linear-gradient(180deg, #f9fbff 0%, #ffffff 100%);
+}
+
+.finishCourseWrap__hint {
+  font-size: 13px;
+}
+
+.finishCourseWrap__error {
+  color: var(--quiz-fail);
+  font-size: 13px;
+}
+
+[data-block-index] .scorm-card {
+  position: relative;
+}
+
+.blockComponent {
+  display: block;
+}
