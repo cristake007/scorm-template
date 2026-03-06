@@ -367,25 +367,6 @@ export function createScormClientStrict(options?: {
   return client;
 }
 
-export function installScormExitHandlers(scorm: ScormClient) {
-  const onExit = () => {
-    try {
-      if (scorm.initialized) scorm.commit();
-      scorm.terminate();
-    } catch {
-      // ignore
-    }
-  };
-
-  window.addEventListener("pagehide", onExit);
-  window.addEventListener("beforeunload", onExit);
-
-  return () => {
-    window.removeEventListener("pagehide", onExit);
-    window.removeEventListener("beforeunload", onExit);
-  };
-}
-
 export function installScormAutoCommit(scorm: ScormClient, intervalMs = 60000) {
   const t = window.setInterval(() => {
     try {

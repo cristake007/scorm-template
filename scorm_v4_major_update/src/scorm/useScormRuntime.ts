@@ -9,7 +9,6 @@ import { installCourseGuards } from "../engine/router/guards";
 import {
   createScormClientStrict,
   installScormAutoCommit,
-  installScormExitHandlers,
   type ScormClient
 } from "./scormClient";
 import { writeCourseObjective } from "./scormReporting";
@@ -72,8 +71,9 @@ export function useScormRuntime(course: CourseModel, router: Router): RuntimeSto
     }
   }
 
-  const uninstallExit = installScormExitHandlers(scorm);
   const uninstallAutoCommit = installScormAutoCommit(scorm, 30000);
+
+  let hasHandledUnload = false;
 
   const onHidden = () => {
     if (document.visibilityState !== "hidden") return;
@@ -85,9 +85,24 @@ export function useScormRuntime(course: CourseModel, router: Router): RuntimeSto
 
   const cleanup = () => {
     document.removeEventListener("visibilitychange", onHidden);
+    window.removeEventListener("pagehide", onPageHide);
     uninstallAutoCommit();
-    uninstallExit();
   };
+
+  const onPageHide = () => {
+    if (hasHandledUnload) return;
+    hasHandledUnload = true;
+
+    try {
+      saveProgress(scorm, state);
+      scorm.commit();
+      scorm.terminate();
+    } finally {
+      cleanup();
+    }
+  };
+
+  window.addEventListener("pagehide", onPageHide);
 
   const finishCourse = () => {
     if (!scorm.initialized) return false;
