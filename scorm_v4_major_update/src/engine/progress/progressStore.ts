@@ -214,9 +214,13 @@ export function reconcileCourseState(params: {
   const lessonIds = touchedLessonId ? [touchedLessonId] : course.lessons.map((l) => l.id);
   for (const lessonId of lessonIds) {
     const lesson = course.lessons.find((l) => l.id === lessonId);
-    if (!lesson || !lesson.chapters.length) continue;
+    if (!lesson) continue;
 
-    const done = lesson.chapters.every((ch) => state.completedChapters.includes(chapterKey(lessonId, ch.id)));
+    const requiredChapters = lesson.chapters.filter((ch) => ch.required ?? true);
+    const done =
+      requiredChapters.length === 0 ||
+      requiredChapters.every((ch) => state.completedChapters.includes(chapterKey(lessonId, ch.id)));
+
     if (done) markLessonComplete(state, lessonId);
   }
 
