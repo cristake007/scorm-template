@@ -229,11 +229,15 @@ export function reconcileCourseState(params: {
   scorm.setCompletion({ completionStatus });
   scorm.set("cmi.progress_measure", progressMeasure01.toFixed(4));
 
+  const currentSuccessStatus = scorm.get("cmi.success_status");
+  const successStatus =
+    currentSuccessStatus === "passed" || currentSuccessStatus === "failed" ? currentSuccessStatus : "unknown";
+
   writeCourseObjective({
     scorm,
     objectiveId: course.course.id,
     completionStatus,
-    successStatus: "unknown",
+    successStatus,
     progressMeasure01
   });
 }
