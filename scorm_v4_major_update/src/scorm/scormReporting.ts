@@ -37,8 +37,6 @@ export function writeInteraction(params: {
   if (description) {
     scorm.set(`cmi.interactions.${n}.description`, cleanText(description, 250));
   }
-
-  scorm.commit();
 }
 
 export function writeCourseObjective(params: {
@@ -66,6 +64,13 @@ export function writeCourseObjective(params: {
     const s = Math.max(0, Math.min(1, scoreScaled01));
     scorm.set(`cmi.objectives.${i}.score.scaled`, s.toFixed(4));
   }
+}
 
-  scorm.commit();
+/**
+ * Optional helper for callers that batch SCORM writes and want an explicit flush point.
+ * Commit cadence should stay at the flow level (route throttling, quiz submit end, unload, interval).
+ */
+export function flushReportingWrites(scorm: ScormClient): boolean {
+  if (!scorm.initialized) return false;
+  return scorm.commit();
 }
